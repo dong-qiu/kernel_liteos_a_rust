@@ -12,9 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust (nightly + build-std)
-        uses: dtolnay/rust-toolchain@nightly
+      - name: Install Rust (pinned nightly + build-std)
+        uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: nightly-2026-01-22
           components: rustfmt, clippy, rust-src
 
       - name: Rustfmt check (hidumper)

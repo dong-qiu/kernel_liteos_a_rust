@@ -86,3 +86,9 @@ B
 
 改动:
 - CI 改为 nightly + build-std 以支持 `thumbv7a-none-eabi`
+
+Prompt:
+1
+
+改动:
+- CI 固定 nightly 版本（`nightly-2026-01-22`）
