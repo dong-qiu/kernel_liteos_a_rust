@@ -15,7 +15,13 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          components: rustfmt
           targets: thumbv7a-none-eabi
+
+      - name: Rustfmt check (hidumper)
+        run: |
+          rustfmt --version
+          rustfmt --check kernel/extended/hidumper/rust/lib.rs
 
       - name: Rust smoke compile (hidumper)
         run: |

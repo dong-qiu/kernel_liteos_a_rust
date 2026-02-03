@@ -61,3 +61,9 @@ Prompt:
 
 改动:
 - README 添加构建步骤、Rust 编译开关、CI 说明、迁移模板
+
+Prompt:
+先在 CI 中增加基础格式/静态检查步骤
+
+改动:
+- CI 增加 rustfmt 格式检查步骤
