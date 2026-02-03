@@ -67,3 +67,9 @@ Prompt:
 
 改动:
 - CI 增加 rustfmt 格式检查步骤
+
+Prompt:
+1
+
+改动:
+- CI 在 rustc 编译中开启 `-D warnings`

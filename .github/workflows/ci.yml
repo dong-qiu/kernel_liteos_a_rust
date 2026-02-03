@@ -29,6 +29,7 @@ jobs:
           rustc \
             --crate-type=lib \
             --emit=obj \
+            -D warnings \
             -C panic=abort \
             -C opt-level=2 \
             -C relocation-model=static \
