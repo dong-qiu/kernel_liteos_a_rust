@@ -10,6 +10,20 @@
 3. M2: Expand to more `kernel/extended` modules with shared Rust utilities.
 4. M3: Standardize Rust module template, tests, and CI coverage.
 
+**Current Progress**
+1. M0 completed: Rust FFI bridge and Make integration for hidumper.
+2. M1 in progress: partial hidumper function migration.
+
+**Milestones**
+1. M1: Complete hidumper migration (CPU usage + fault log).
+2. M2: Add shared Rust utilities (logging, error codes, safe wrappers).
+3. M3: CI expansion (formatting + lint + target build matrix).
+
+**How To Contribute**
+1. Keep changes incremental; avoid breaking C ABI.
+2. Record prompts and changes in `docs/devlog.md`.
+3. Prefer adding Rust behind existing C-facing APIs.
+
 -   [Introduction](#section11660541593)
 -   [Directory Structure](#section161941989596)
 -   [Constraints](#section119744591305)
