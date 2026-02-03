@@ -98,3 +98,9 @@ Prompt:
 
 改动:
 - 新增 `rust-toolchain.toml` 并在 README 说明
+
+Prompt:
+把 CI 加速优化一下
+
+改动:
+- CI 增加 cargo/rustup 缓存
