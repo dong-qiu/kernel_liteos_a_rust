@@ -39,7 +39,7 @@ jobs:
           RUSTFLAGS: "-D warnings"
         run: |
           rustc --version
-          cargo +nightly build \
+          cargo build \
             --manifest-path kernel/extended/hidumper/rust/Cargo.toml \
             --target thumbv7a-none-eabi \
             -Z build-std=core,compiler_builtins \
@@ -47,7 +47,7 @@ jobs:
 
       - name: Clippy (hidumper)
         run: |
-          cargo +nightly clippy \
+          cargo clippy \
             --manifest-path kernel/extended/hidumper/rust/Cargo.toml \
             --target thumbv7a-none-eabi \
             -Z build-std=core,compiler_builtins \

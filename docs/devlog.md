@@ -104,3 +104,15 @@ Prompt:
 
 改动:
 - CI 增加 cargo/rustup 缓存
+
+Prompt:
+又出现类似的情况，每次提交到GitHub上后，显示Workflow的运行都是失败的，请分析原因
+
+改动:
+- 诊断 CI 失败原因：`cargo +nightly` 未使用固定工具链导致缺少 rust-src
+
+Prompt:
+使用方案2
+
+改动:
+- CI 改为使用 `rust-toolchain.toml` 的默认工具链
