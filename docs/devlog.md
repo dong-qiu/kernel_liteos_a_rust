@@ -162,3 +162,11 @@ Prompt:
 改动:
 - 迁移 hidumper 的 CPU usage 输出逻辑到 Rust
 - 新增 hidumper C 侧 FFI 辅助函数（进程信息/CPU usage/内存分配/格式化输出）
+
+Prompt:
+1
+
+改动:
+- 新增 `kernel/rust` 基础设施（log/types）
+- hidumper Rust 引用 `kernel_rust` 基础 crate
+- CI 增加 `kernel/rust` 的 build/clippy

@@ -3,6 +3,7 @@
 use core::ffi::{c_char, c_int};
 use core::panic::PanicInfo;
 use core::ptr;
+use kernel_rust::log::printk;
 
 extern "C" {
     fn HidumperPrintk(msg: *const c_char);
@@ -52,12 +53,8 @@ const UNSUPPORTED: &[u8] = b"\nUnsupported!\n\0";
 const MEMDATA_UNSUPPORTED: &[u8] = b"Unsupported now!\n\0";
 const PANIC_MSG: &[u8] = b"\nHiDumper rust panic\n\0";
 
-#[inline(always)]
-fn printk(msg: &[u8]) {
-    unsafe {
-        HidumperPrintk(msg.as_ptr() as *const c_char);
-    }
-}
+#[allow(unused_imports)]
+use kernel_rust::types::*;
 
 #[no_mangle]
 pub extern "C" fn HiDumperDumpCpuUsageRust() {
