@@ -16,3 +16,10 @@ Prompt:
 
 改动:
 - 提交 hidumper Rust 接入与构建支持相关改动
+
+Prompt:
+请在我的github账号下新建一个项目，并将本地项目提交到远程github上
+
+改动:
+- 创建 GitHub 仓库 `dong-qiu/kernel_liteos_a_rust`（public）
+- 新增远程 `github` 并推送当前分支
