@@ -1,5 +1,3 @@
-#![no_std]
-
 use core::ffi::c_char;
 
 extern "C" {

@@ -1,5 +1,3 @@
-#![no_std]
-
 pub type U8 = u8;
 pub type U16 = u16;
 pub type U32 = u32;

@@ -170,3 +170,9 @@ Prompt:
 - 新增 `kernel/rust` 基础设施（log/types）
 - hidumper Rust 引用 `kernel_rust` 基础 crate
 - CI 增加 `kernel/rust` 的 build/clippy
+
+Prompt:
+CI出现问题，请分析原因
+
+改动:
+- 修复 `kernel/rust` 子模块中的 `#![no_std]` 误用（仅 crate root 允许）
