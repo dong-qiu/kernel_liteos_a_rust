@@ -1,5 +1,9 @@
 # LiteOS Cortex-A<a name="EN-US_TOPIC_0000001096612501"></a>
 
+![CI](https://github.com/dong-qiu/kernel_liteos_a_rust/actions/workflows/ci.yml/badge.svg?branch=main)
+
+**Rust Migration Note:** This repo tracks an incremental Rust migration of LiteOS-A. Progress is logged in `docs/devlog.md`.
+
 -   [Introduction](#section11660541593)
 -   [Directory Structure](#section161941989596)
 -   [Constraints](#section119744591305)
@@ -102,4 +106,3 @@ For compilation, please refer to the [compilation instructions](https://gitee.co
 [drivers\_liteos](https://gitee.com/openharmony/drivers_liteos/blob/master/README.md)
 
 [kernel\_liteos\_a](https://gitee.com/openharmony/kernel_liteos_a/blob/master/README.md)
-

@@ -23,3 +23,11 @@ Prompt:
 改动:
 - 创建 GitHub 仓库 `dong-qiu/kernel_liteos_a_rust`（public）
 - 新增远程 `github` 并推送当前分支
+
+Prompt:
+1, 2, 3
+
+改动:
+- 切换默认分支为 `main`
+- 新增 GitHub Actions CI（Rust hidumper smoke 编译）
+- README 添加 CI 徽章与 Rust 迁移说明

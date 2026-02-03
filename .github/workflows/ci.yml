@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  rust-hidumper-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7a-none-eabi
+
+      - name: Rust smoke compile (hidumper)
+        run: |
+          rustc --version
+          rustc \
+            --crate-type=lib \
+            --emit=obj \
+            -C panic=abort \
+            -C opt-level=2 \
+            -C relocation-model=static \
+            --target thumbv7a-none-eabi \
+            kernel/extended/hidumper/rust/lib.rs \
+            -o /tmp/hidumper_rust.o
