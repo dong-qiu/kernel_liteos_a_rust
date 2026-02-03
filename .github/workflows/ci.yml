@@ -15,7 +15,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: rustfmt
+          components: rustfmt, clippy
           targets: thumbv7a-none-eabi
 
       - name: Rustfmt check (hidumper)
@@ -36,3 +36,10 @@ jobs:
             --target thumbv7a-none-eabi \
             kernel/extended/hidumper/rust/lib.rs \
             -o /tmp/hidumper_rust.o
+
+      - name: Clippy (hidumper)
+        run: |
+          cargo clippy \
+            --manifest-path kernel/extended/hidumper/rust/Cargo.toml \
+            --target thumbv7a-none-eabi \
+            -- -D warnings

@@ -73,3 +73,10 @@ Prompt:
 
 改动:
 - CI 在 rustc 编译中开启 `-D warnings`
+
+Prompt:
+1
+
+改动:
+- 添加 hidumper Rust 的 `Cargo.toml`
+- CI 增加 `cargo clippy` 检查
