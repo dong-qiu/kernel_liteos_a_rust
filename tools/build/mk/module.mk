@@ -32,7 +32,8 @@ TOPDIR = $(abspath $(LITEOSTOPDIR)/../..)
 
 TARGET = $(OUT)/lib/lib$(MODULE_NAME).a
 
-LOCAL_OBJS = $(addprefix $(OBJOUT)/,$(addsuffix .o,$(basename $(subst $(TOPDIR)/,,$(abspath $(LOCAL_SRCS))))))
+LOCAL_OBJS = $(addprefix $(OBJOUT)/,$(addsuffix .o,$(basename $(subst $(TOPDIR)/,,$(abspath $(LOCAL_SRCS)))))) \
+             $(LOCAL_EXTRA_OBJS)
 
 all : $(TARGET)
 

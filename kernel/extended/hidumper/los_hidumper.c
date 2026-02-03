@@ -86,6 +86,14 @@
     }                                                       \
 }
 
+#ifdef HIDUMPER_USE_RUST
+extern VOID HiDumperDumpSysInfoRust(VOID);
+extern VOID HiDumperDumpMemUsageRust(VOID);
+extern VOID HiDumperDumpTaskInfoRust(VOID);
+extern VOID HiDumperDumpMemDataRust(struct MemDumpParam *param);
+extern VOID HiDumperInjectKernelCrashRust(VOID);
+#endif
+
 /* ------------ local prototypes ------------ */
 /* ------------ local function declarations ------------ */
 STATIC INT32 HiDumperOpen(struct file *filep);
@@ -334,6 +342,15 @@ static void RegisterCommonAdapter(void)
 {
     struct HiDumperAdapter adapter;
 
+#ifdef HIDUMPER_USE_RUST
+    adapter.DumpSysInfo = HiDumperDumpSysInfoRust;
+    adapter.DumpCpuUsage = DumpCpuUsageUnsafe;
+    adapter.DumpMemUsage = HiDumperDumpMemUsageRust;
+    adapter.DumpTaskInfo = HiDumperDumpTaskInfoRust;
+    adapter.DumpFaultLog = DumpFaultLog;
+    adapter.DumpMemData = HiDumperDumpMemDataRust;
+    adapter.InjectKernelCrash = HiDumperInjectKernelCrashRust;
+#else
     adapter.DumpSysInfo = DumpSysInfo;
     adapter.DumpCpuUsage = DumpCpuUsageUnsafe;
     adapter.DumpMemUsage = DumpMemUsage;
@@ -341,6 +358,7 @@ static void RegisterCommonAdapter(void)
     adapter.DumpFaultLog = DumpFaultLog;
     adapter.DumpMemData = DumpMemData;
     adapter.InjectKernelCrash = InjectKernelCrash;
+#endif
     HiDumperRegisterAdapter(&adapter);
 }
 
