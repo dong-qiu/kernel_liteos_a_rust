@@ -34,6 +34,12 @@
 #include "los_process_pri.h"
 #include "los_task_pri.h"
 #include "los_typedef.h"
+#ifdef LOSCFG_FS_VFS
+#include "fs/file.h"
+#endif
+#ifdef LOSCFG_BLACKBOX
+#include "los_blackbox.h"
+#endif
 
 #ifdef LOSCFG_SHELL
 extern VOID   OsShellCmdSystemInfoGet(VOID);
@@ -117,6 +123,59 @@ int HidumperInjectKernelCrash(void)
     *((INT32 *)HIDUMPER_KERNEL_FAULT_ADDR) = HIDUMPER_KERNEL_FAULT_VALUE;
     return 0;
 #else
+    return -1;
+#endif
+}
+
+const char *HidumperGetKernelFaultLogPath(void)
+{
+#ifdef LOSCFG_BLACKBOX
+    return KERNEL_FAULT_LOG_PATH;
+#else
+    return NULL;
+#endif
+}
+
+const char *HidumperGetUserFaultLogPath(void)
+{
+#ifdef LOSCFG_BLACKBOX
+    return USER_FAULT_LOG_PATH;
+#else
+    return NULL;
+#endif
+}
+
+int HidumperOpenReadOnly(const char *path)
+{
+#ifdef LOSCFG_FS_VFS
+    if (path == NULL) {
+        return -1;
+    }
+    return open(path, O_RDONLY);
+#else
+    (VOID)path;
+    return -1;
+#endif
+}
+
+int HidumperClose(int fd)
+{
+#ifdef LOSCFG_FS_VFS
+    return close(fd);
+#else
+    (VOID)fd;
+    return -1;
+#endif
+}
+
+int HidumperRead(int fd, char *buf, unsigned int len)
+{
+#ifdef LOSCFG_FS_VFS
+    return read(fd, buf, len);
+#else
+    (VOID)fd;
+    (VOID)buf;
+    (VOID)len;
     return -1;
 #endif
 }

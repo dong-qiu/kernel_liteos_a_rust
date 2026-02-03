@@ -91,6 +91,7 @@ extern VOID HiDumperDumpSysInfoRust(VOID);
 extern VOID HiDumperDumpCpuUsageRust(VOID);
 extern VOID HiDumperDumpMemUsageRust(VOID);
 extern VOID HiDumperDumpTaskInfoRust(VOID);
+extern VOID HiDumperDumpFaultLogRust(VOID);
 extern VOID HiDumperDumpMemDataRust(struct MemDumpParam *param);
 extern VOID HiDumperInjectKernelCrashRust(VOID);
 #endif
@@ -348,7 +349,7 @@ static void RegisterCommonAdapter(void)
     adapter.DumpCpuUsage = HiDumperDumpCpuUsageRust;
     adapter.DumpMemUsage = HiDumperDumpMemUsageRust;
     adapter.DumpTaskInfo = HiDumperDumpTaskInfoRust;
-    adapter.DumpFaultLog = DumpFaultLog;
+    adapter.DumpFaultLog = HiDumperDumpFaultLogRust;
     adapter.DumpMemData = HiDumperDumpMemDataRust;
     adapter.InjectKernelCrash = HiDumperInjectKernelCrashRust;
 #else

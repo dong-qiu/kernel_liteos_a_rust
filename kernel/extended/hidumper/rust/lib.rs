@@ -19,6 +19,11 @@ extern "C" {
     fn HidumperMemFree(ptr: *mut core::ffi::c_void);
     fn HidumperPrintCpuUsageHeader();
     fn HidumperPrintCpuUsageLine(name: *const c_char, pid: u32, all: u32, ten: u32, one: u32);
+    fn HidumperGetKernelFaultLogPath() -> *const c_char;
+    fn HidumperGetUserFaultLogPath() -> *const c_char;
+    fn HidumperOpenReadOnly(path: *const c_char) -> c_int;
+    fn HidumperClose(fd: c_int) -> c_int;
+    fn HidumperRead(fd: c_int, buf: *mut c_char, len: u32) -> c_int;
 }
 
 #[repr(C)]
@@ -40,6 +45,8 @@ const CPU_USAGE_HEADER: &[u8] = b"\n************ cpu usage ***********\n\0";
 const MEM_USAGE_HEADER: &[u8] = b"\n************ mem usage ***********\n\0";
 const PAGE_USAGE_HEADER: &[u8] = b"************ physical page usage ***********\n\0";
 const TASK_INFO_HEADER: &[u8] = b"\n************ task info ***********\n\0";
+const KERNEL_FAULT_HEADER: &[u8] = b"************kernel fault info************\n\0";
+const USER_FAULT_HEADER: &[u8] = b"************user fault info************\n\0";
 const UNIT_KB: &[u8] = b"Unit: KB\n\0";
 const UNSUPPORTED: &[u8] = b"\nUnsupported!\n\0";
 const MEMDATA_UNSUPPORTED: &[u8] = b"Unsupported now!\n\0";
@@ -152,6 +159,48 @@ pub extern "C" fn HiDumperDumpTaskInfoRust() {
 #[no_mangle]
 pub extern "C" fn HiDumperDumpMemDataRust(_param: *mut core::ffi::c_void) {
     printk(MEMDATA_UNSUPPORTED);
+}
+
+#[no_mangle]
+pub extern "C" fn HiDumperDumpFaultLogRust() {
+    unsafe {
+        let kernel = HidumperGetKernelFaultLogPath();
+        let user = HidumperGetUserFaultLogPath();
+        if kernel.is_null() || user.is_null() {
+            printk(UNSUPPORTED);
+            return;
+        }
+        dump_file(kernel, KERNEL_FAULT_HEADER);
+        dump_file(user, USER_FAULT_HEADER);
+    }
+}
+
+unsafe fn dump_file(path: *const c_char, header: &[u8]) {
+    if path.is_null() {
+        printk(UNSUPPORTED);
+        return;
+    }
+
+    let fd = HidumperOpenReadOnly(path);
+    if fd < 0 {
+        printk(UNSUPPORTED);
+        return;
+    }
+
+    printk(b"\n\0");
+    printk(header);
+
+    let mut buf = [0u8; 128];
+    loop {
+        let n = HidumperRead(fd, buf.as_mut_ptr() as *mut c_char, (buf.len() - 1) as u32);
+        if n <= 0 {
+            break;
+        }
+        buf[n as usize] = 0;
+        HidumperPrintk(buf.as_ptr() as *const c_char);
+    }
+
+    let _ = HidumperClose(fd);
 }
 
 #[no_mangle]
