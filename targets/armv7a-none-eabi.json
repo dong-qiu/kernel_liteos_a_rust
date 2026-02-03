@@ -12,6 +12,7 @@
   "executables": false,
   "linker-flavor": "ld.lld",
   "linker": "rust-lld",
+  "llvm-floatabi": "soft",
   "panic-strategy": "abort",
   "relocation-model": "static",
   "code-model": "small",

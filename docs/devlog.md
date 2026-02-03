@@ -137,3 +137,9 @@ Prompt:
 
 改动:
 - 修复自定义 target JSON 类型错误（`target-pointer-width` 与 `target-c-int-width` 需为数字）
+
+Prompt:
+soft
+
+改动:
+- 自定义 target JSON 添加 `llvm-floatabi: soft`
