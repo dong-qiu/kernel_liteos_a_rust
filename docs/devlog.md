@@ -143,3 +143,9 @@ soft
 
 改动:
 - 自定义 target JSON 添加 `llvm-floatabi: soft`
+
+Prompt:
+CI还是没有变绿，请继续分析原因
+
+改动:
+- 修复自定义 target JSON 的 data-layout，补齐 `Fi8` 以匹配 LLVM 默认布局
