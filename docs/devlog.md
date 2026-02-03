@@ -31,3 +31,9 @@ Prompt:
 - 切换默认分支为 `main`
 - 新增 GitHub Actions CI（Rust hidumper smoke 编译）
 - README 添加 CI 徽章与 Rust 迁移说明
+
+Prompt:
+1
+
+改动:
+- 删除远端 `master` 分支
