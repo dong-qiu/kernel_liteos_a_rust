@@ -36,6 +36,9 @@ RUST_TARGET=armv7a-none-eabi
 RUSTFLAGS=-C panic=abort -C opt-level=2 -C relocation-model=static
 ```
 
+**Rust Toolchain**
+1. This repo pins nightly in `rust-toolchain.toml` to match CI.
+
 **Rust Build Switches**
 1. `HIDUMPER_USE_RUST=y` enables Rust implementation for hidumper.
 2. Default target is `armv7a-none-eabi` unless `LOSCFG_LLVM_TARGET` is set.

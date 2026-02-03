@@ -92,3 +92,9 @@ Prompt:
 
 改动:
 - CI 固定 nightly 版本（`nightly-2026-01-22`）
+
+Prompt:
+1
+
+改动:
+- 新增 `rust-toolchain.toml` 并在 README 说明
