@@ -24,6 +24,32 @@
 2. Record prompts and changes in `docs/devlog.md`.
 3. Prefer adding Rust behind existing C-facing APIs.
 
+**Build Steps (Make)**
+1. Configure your product as usual (Kconfig/defconfig).
+2. Build with Rust enabled for hidumper.
+Example: `make HIDUMPER_USE_RUST=y`
+3. Optionally override toolchain.
+Example:
+```
+RUSTC=rustc
+RUST_TARGET=armv7a-none-eabi
+RUSTFLAGS=-C panic=abort -C opt-level=2 -C relocation-model=static
+```
+
+**Rust Build Switches**
+1. `HIDUMPER_USE_RUST=y` enables Rust implementation for hidumper.
+2. Default target is `armv7a-none-eabi` unless `LOSCFG_LLVM_TARGET` is set.
+
+**CI Notes**
+1. GitHub Actions runs a Rust-only smoke compile for `hidumper`.
+2. Workflow file: `.github/workflows/ci.yml`
+
+**Migration Template (Recommended)**
+1. Add a Rust module under `<module>/rust/` with `#![no_std]`.
+2. Provide a small C FFI shim for config-gated functions/macros.
+3. Keep the C API stable and swap the adapter implementation.
+4. Add a minimal CI check (at least `rustc --emit=obj`).
+
 -   [Introduction](#section11660541593)
 -   [Directory Structure](#section161941989596)
 -   [Constraints](#section119744591305)

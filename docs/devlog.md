@@ -55,3 +55,9 @@ Prompt:
 
 改动:
 - README 添加当前进度、里程碑、贡献方式小节
+
+Prompt:
+完善 README（比如“构建步骤 / Rust 编译开关 / CI 说明 / 迁移规范模板”）
+
+改动:
+- README 添加构建步骤、Rust 编译开关、CI 说明、迁移模板
