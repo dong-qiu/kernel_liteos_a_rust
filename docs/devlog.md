@@ -131,3 +131,9 @@ B
 - CI 改用自定义 target JSON
 - hidumper Makefile 默认 Rust 目标指向自定义 target JSON
 - README 更新默认 Rust target 说明
+
+Prompt:
+还是没有解决这个问题，请继续分析原因
+
+改动:
+- 修复自定义 target JSON 类型错误（`target-pointer-width` 与 `target-c-int-width` 需为数字）
