@@ -7,7 +7,7 @@ LOCAL_SRCS := $(wildcard *.c)
 HIDUMPER_USE_RUST ?= n
 RUSTC ?= rustc
 RUSTFLAGS ?= -C panic=abort -C opt-level=2 -C relocation-model=static
-RUST_TARGET ?= $(if $(LOSCFG_LLVM_TARGET),$(LOSCFG_LLVM_TARGET:"%"=%),armv7a-none-eabi)
+RUST_TARGET ?= $(if $(LOSCFG_LLVM_TARGET),$(LOSCFG_LLVM_TARGET:"%"=%),$(LITEOSTOPDIR)/targets/armv7a-none-eabi.json)
 
 HIDUMPER_RUST_SRC := $(LITEOSTOPDIR)/kernel/extended/hidumper/rust/lib.rs
 HIDUMPER_RUST_OBJ := $(OUT)/obj/kernel/extended/hidumper/rust/hidumper_rust.o

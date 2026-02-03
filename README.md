@@ -41,7 +41,7 @@ RUSTFLAGS=-C panic=abort -C opt-level=2 -C relocation-model=static
 
 **Rust Build Switches**
 1. `HIDUMPER_USE_RUST=y` enables Rust implementation for hidumper.
-2. Default target is `armv7a-none-eabi` unless `LOSCFG_LLVM_TARGET` is set.
+2. Default target is `targets/armv7a-none-eabi.json` unless `LOSCFG_LLVM_TARGET` is set.
 
 **CI Notes**
 1. GitHub Actions runs a Rust-only smoke compile for `hidumper`.

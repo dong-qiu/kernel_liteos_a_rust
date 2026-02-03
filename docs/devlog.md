@@ -116,3 +116,18 @@ Prompt:
 
 改动:
 - CI 改为使用 `rust-toolchain.toml` 的默认工具链
+
+Prompt:
+最新一轮CI结果没有变绿，请分析原因
+
+改动:
+- 诊断 CI 失败原因：`thumbv7a-none-eabi` 不是内置 Rust 目标
+
+Prompt:
+B
+
+改动:
+- 新增自定义目标 `targets/armv7a-none-eabi.json`
+- CI 改用自定义 target JSON
+- hidumper Makefile 默认 Rust 目标指向自定义 target JSON
+- README 更新默认 Rust target 说明
