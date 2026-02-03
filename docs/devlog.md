@@ -43,3 +43,9 @@ Prompt:
 
 改动:
 - 删除本地 `master` 分支
+
+Prompt:
+在 README 补充迁移路线图（简短但清晰）
+
+改动:
+- README 添加 Rust 迁移路线图（简短版）

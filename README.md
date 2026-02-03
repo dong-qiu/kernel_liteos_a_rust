@@ -4,6 +4,12 @@
 
 **Rust Migration Note:** This repo tracks an incremental Rust migration of LiteOS-A. Progress is logged in `docs/devlog.md`.
 
+**Rust Migration Roadmap (Short)**
+1. M0: Rust toolchain + FFI bridge + Make integration (hidumper smoke).
+2. M1: Migrate `kernel/extended/hidumper` functions behind the existing C API.
+3. M2: Expand to more `kernel/extended` modules with shared Rust utilities.
+4. M3: Standardize Rust module template, tests, and CI coverage.
+
 -   [Introduction](#section11660541593)
 -   [Directory Structure](#section161941989596)
 -   [Constraints](#section119744591305)
