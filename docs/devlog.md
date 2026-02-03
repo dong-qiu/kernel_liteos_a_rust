@@ -37,3 +37,9 @@ Prompt:
 
 改动:
 - 删除远端 `master` 分支
+
+Prompt:
+1
+
+改动:
+- 删除本地 `master` 分支
