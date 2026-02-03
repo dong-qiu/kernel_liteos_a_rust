@@ -80,3 +80,9 @@ Prompt:
 改动:
 - 添加 hidumper Rust 的 `Cargo.toml`
 - CI 增加 `cargo clippy` 检查
+
+Prompt:
+B
+
+改动:
+- CI 改为 nightly + build-std 以支持 `thumbv7a-none-eabi`

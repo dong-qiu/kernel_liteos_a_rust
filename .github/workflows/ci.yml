@@ -12,11 +12,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust (nightly + build-std)
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          components: rustfmt, clippy
-          targets: thumbv7a-none-eabi
+          components: rustfmt, clippy, rust-src
 
       - name: Rustfmt check (hidumper)
         run: |
@@ -24,22 +23,21 @@ jobs:
           rustfmt --check kernel/extended/hidumper/rust/lib.rs
 
       - name: Rust smoke compile (hidumper)
+        env:
+          RUSTFLAGS: "-D warnings"
         run: |
           rustc --version
-          rustc \
-            --crate-type=lib \
-            --emit=obj \
-            -D warnings \
-            -C panic=abort \
-            -C opt-level=2 \
-            -C relocation-model=static \
+          cargo +nightly build \
+            --manifest-path kernel/extended/hidumper/rust/Cargo.toml \
             --target thumbv7a-none-eabi \
-            kernel/extended/hidumper/rust/lib.rs \
-            -o /tmp/hidumper_rust.o
+            -Z build-std=core,compiler_builtins \
+            -Z build-std-features=compiler-builtins-mem
 
       - name: Clippy (hidumper)
         run: |
-          cargo clippy \
+          cargo +nightly clippy \
             --manifest-path kernel/extended/hidumper/rust/Cargo.toml \
             --target thumbv7a-none-eabi \
+            -Z build-std=core,compiler_builtins \
+            -Z build-std-features=compiler-builtins-mem \
             -- -D warnings
