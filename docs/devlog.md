@@ -149,3 +149,16 @@ CI还是没有变绿，请继续分析原因
 
 改动:
 - 修复自定义 target JSON 的 data-layout，补齐 `Fi8` 以匹配 LLVM 默认布局
+
+Prompt:
+我想继续迁移工作，请看看目前又哪些候选工作
+
+改动:
+- 规划下一批迁移候选（hidumper CPU usage 优先）
+
+Prompt:
+1
+
+改动:
+- 迁移 hidumper 的 CPU usage 输出逻辑到 Rust
+- 新增 hidumper C 侧 FFI 辅助函数（进程信息/CPU usage/内存分配/格式化输出）

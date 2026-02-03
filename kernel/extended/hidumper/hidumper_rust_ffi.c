@@ -28,7 +28,10 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "los_cpup.h"
+#include "los_memory.h"
 #include "los_printf.h"
+#include "los_process_pri.h"
 #include "los_task_pri.h"
 #include "los_typedef.h"
 
@@ -41,6 +44,12 @@ extern UINT32 OsShellCmdDumpPmm(VOID);
 
 #define HIDUMPER_KERNEL_FAULT_ADDR  0x1
 #define HIDUMPER_KERNEL_FAULT_VALUE 0x2
+
+typedef struct {
+    const CHAR *name;
+    UINT32 pid;
+    UINT8 unused;
+} HidumperProcessInfo;
 
 void HidumperPrintk(const char *msg)
 {
@@ -110,4 +119,60 @@ int HidumperInjectKernelCrash(void)
 #else
     return -1;
 #endif
+}
+
+UINT32 HidumperGetProcessMaxNum(void)
+{
+    return g_processMaxNum;
+}
+
+INT32 HidumperGetProcessInfo(UINT32 pid, HidumperProcessInfo *out)
+{
+    if ((out == NULL) || (pid >= g_processMaxNum)) {
+        return -1;
+    }
+
+    LosProcessCB *pcb = g_processCBArray + pid;
+    out->name = pcb->processName;
+    out->pid = pcb->processID;
+    out->unused = OsProcessIsUnused(pcb) ? 1 : 0;
+    return 0;
+}
+
+UINT32 HidumperGetAllProcessCpuUsage(UINT16 mode, CPUP_INFO_S *cpupInfo, UINT32 len)
+{
+#ifdef LOSCFG_KERNEL_CPUP
+    return LOS_GetAllProcessCpuUsage(mode, cpupInfo, len);
+#else
+    (VOID)mode;
+    (VOID)cpupInfo;
+    (VOID)len;
+    return (UINT32)-1;
+#endif
+}
+
+VOID *HidumperMemAlloc(UINT32 size)
+{
+    return LOS_MemAlloc(m_aucSysMem1, size);
+}
+
+VOID HidumperMemFree(VOID *ptr)
+{
+    if (ptr != NULL) {
+        (VOID)LOS_MemFree(m_aucSysMem1, ptr);
+    }
+}
+
+VOID HidumperPrintCpuUsageHeader(void)
+{
+    PRINTK("%-32s PID CPUUSE CPUUSE10S CPUUSE1S\n", "PName");
+}
+
+VOID HidumperPrintCpuUsageLine(const CHAR *name, UINT32 pid, UINT32 all, UINT32 ten, UINT32 one)
+{
+    PRINTK("%-32s %u %5u.%1u%8u.%1u%7u.%-1u\n",
+        name, pid,
+        all / LOS_CPUP_PRECISION_MULT, all % LOS_CPUP_PRECISION_MULT,
+        ten / LOS_CPUP_PRECISION_MULT, ten % LOS_CPUP_PRECISION_MULT,
+        one / LOS_CPUP_PRECISION_MULT, one % LOS_CPUP_PRECISION_MULT);
 }

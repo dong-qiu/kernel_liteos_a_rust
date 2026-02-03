@@ -88,6 +88,7 @@
 
 #ifdef HIDUMPER_USE_RUST
 extern VOID HiDumperDumpSysInfoRust(VOID);
+extern VOID HiDumperDumpCpuUsageRust(VOID);
 extern VOID HiDumperDumpMemUsageRust(VOID);
 extern VOID HiDumperDumpTaskInfoRust(VOID);
 extern VOID HiDumperDumpMemDataRust(struct MemDumpParam *param);
@@ -344,7 +345,7 @@ static void RegisterCommonAdapter(void)
 
 #ifdef HIDUMPER_USE_RUST
     adapter.DumpSysInfo = HiDumperDumpSysInfoRust;
-    adapter.DumpCpuUsage = DumpCpuUsageUnsafe;
+    adapter.DumpCpuUsage = HiDumperDumpCpuUsageRust;
     adapter.DumpMemUsage = HiDumperDumpMemUsageRust;
     adapter.DumpTaskInfo = HiDumperDumpTaskInfoRust;
     adapter.DumpFaultLog = DumpFaultLog;
