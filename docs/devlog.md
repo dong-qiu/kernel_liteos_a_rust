@@ -306,3 +306,9 @@ Prompt:
 
 改动:
 - 迁移 blackbox `SaveLogWithoutReset`/`FormatErrorInfo` 关键路径到 Rust
+
+Prompt:
+CI运行出现错误，请分析原因并修复
+
+改动:
+- 修复 blackbox Rust clippy 报错（unnecessary cast）

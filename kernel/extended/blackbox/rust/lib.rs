@@ -80,7 +80,7 @@ unsafe fn copy_cstr(dst: &mut [u8], src: *const c_char) {
         if ch == 0 {
             break;
         }
-        dst[i] = ch as u8;
+        dst[i] = ch;
         i += 1;
     }
     dst[i] = 0;
