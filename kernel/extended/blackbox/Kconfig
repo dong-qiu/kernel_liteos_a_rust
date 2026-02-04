@@ -5,6 +5,13 @@ config BLACKBOX
     help
       Answer Y to enable LiteOS support blackbox
 
+config BLACKBOX_USE_RUST
+    bool "Use Rust for blackbox read-only path"
+    default n
+    depends on BLACKBOX
+    help
+      Answer Y to enable Rust implementation for blackbox read-only helpers.
+
 config BLACKBOX_LOG_PART_MOUNT_POINT
     string "unknown"
     default "/storage"
