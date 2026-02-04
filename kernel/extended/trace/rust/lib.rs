@@ -30,7 +30,8 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn OsTraceCmdIsValidRust(msg: *const TraceClientCmd) -> Bool {
+pub extern "C" fn OsTraceCmdIsValidRust(msg: *const c_void) -> Bool {
+    let msg = msg as *const TraceClientCmd;
     if msg.is_null() {
         return 0;
     }
@@ -46,10 +47,11 @@ pub extern "C" fn OsTraceCmdIsValidRust(msg: *const TraceClientCmd) -> Bool {
 }
 
 #[no_mangle]
-pub extern "C" fn OsTraceCmdHandleRust(msg: *const TraceClientCmd) {
+pub extern "C" fn OsTraceCmdHandleRust(msg: *const c_void) {
     if OsTraceCmdIsValidRust(msg) == 0 {
         return;
     }
+    let msg = msg as *const TraceClientCmd;
     let cmd = unsafe { (*msg).cmd };
     match cmd {
         TRACE_CMD_START => {
@@ -73,9 +75,4 @@ pub extern "C" fn OsTraceCmdHandleRust(msg: *const TraceClientCmd) {
         }
         _ => {}
     }
-}
-
-#[no_mangle]
-pub extern "C" fn OsTraceCmdHandleRustOpaque(msg: *const c_void) {
-    OsTraceCmdHandleRust(msg as *const TraceClientCmd);
 }

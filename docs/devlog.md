@@ -218,3 +218,9 @@ Prompt:
 - 迁移 trace 控制指令解析到 Rust（command validation/handle）
 - trace Makefile 支持 `TRACE_USE_RUST`
 - CI 增加 trace Rust build/clippy
+
+Prompt:
+CI没有通过，请分析原因
+
+改动:
+- 修复 trace Rust API 的 `private_interfaces` 报错（改用 `*const c_void` 接口）

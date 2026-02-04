@@ -181,17 +181,17 @@ STATIC VOID OsTraceHookInstall(VOID)
 
 #ifdef LOSCFG_TRACE_CONTROL_AGENT
 #ifdef TRACE_USE_RUST
-extern BOOL OsTraceCmdIsValidRust(const TraceClientCmd *msg);
-extern VOID OsTraceCmdHandleRust(const TraceClientCmd *msg);
+extern BOOL OsTraceCmdIsValidRust(const VOID *msg);
+extern VOID OsTraceCmdHandleRust(const VOID *msg);
 
 STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
 {
-    return OsTraceCmdIsValidRust(msg);
+    return OsTraceCmdIsValidRust((const VOID *)msg);
 }
 
 STATIC VOID OsTraceCmdHandle(const TraceClientCmd *msg)
 {
-    OsTraceCmdHandleRust(msg);
+    OsTraceCmdHandleRust((const VOID *)msg);
 }
 #else
 STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
