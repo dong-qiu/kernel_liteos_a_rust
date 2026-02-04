@@ -276,3 +276,9 @@ Prompt:
 
 改动:
 - 迁移 blackbox `CreateLogDir` 到 Rust
+
+Prompt:
+CI没有通过，请帮忙修复
+
+改动:
+- 修复 blackbox Rust clippy 报错（unnecessary cast）

@@ -108,7 +108,7 @@ pub unsafe extern "C" fn BlackboxCreateLogDirRust(dir_path: *const c_char) -> i3
                     return -1;
                 }
             }
-            cur[idx] = ch as u8;
+            cur[idx] = ch;
             idx += 1;
             p = p.add(1);
         }
