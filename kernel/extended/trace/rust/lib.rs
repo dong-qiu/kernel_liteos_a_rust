@@ -28,6 +28,9 @@ const TRACE_STOPED: u32 = 3;
 const TRACE_EVENT_MASK: u32 = 0xFFFFFFF0;
 const TRACE_ENABLE_TRUE: Bool = 1;
 const TRACE_ENABLE_FALSE: Bool = 0;
+const TRACE_HWI_FLAG: u32 = 0x20;
+const TRACE_TASK_FLAG: u32 = 0x40;
+const TRACE_FRAME_BUF_MAX: usize = 512;
 
 extern "C" {
     fn LOS_TraceStart() -> u32;
@@ -59,6 +62,34 @@ extern "C" {
     fn TraceSetInitialStateRust();
     fn TraceLogInitAlreadyRust(state: u32);
     fn TraceLogCreateAgentFailRust(ret: u32);
+    fn TraceIsEnabledRust() -> Bool;
+    fn TraceGetMaskRust() -> u32;
+    fn TraceGetModeFlagRust(event_type: u32) -> u32;
+    fn TraceIsTaskCreateOrPrioSetRust(event_type: u32) -> Bool;
+    fn TraceIsMemInfoReqRust(event_type: u32) -> Bool;
+    fn TraceHwiFilterRust(hwi_num: u32) -> Bool;
+    fn TraceHandleMemInfoReqRust(identity: usize);
+    fn TraceGetCurTaskIdRust() -> u32;
+    fn TraceGetCurPidRust() -> u32;
+    fn TraceGetCyclesRust() -> u64;
+    fn TraceGetMaskTidRust(task_id: u32) -> u32;
+    fn TraceObjAddRust(event_type: u32, identity: usize);
+    fn TraceFrameSizeRust() -> u32;
+    fn TraceFrameMaxParamsRust() -> u16;
+    fn TraceFrameClearRust(frame: *mut c_void);
+    fn TraceFrameSetBasicRust(
+        frame: *mut c_void,
+        event_type: u32,
+        cur_task: u32,
+        cur_pid: u32,
+        identity: usize,
+        cur_time: u64,
+    );
+    fn TraceFrameSetCoreRust(frame: *mut c_void, param_count: u16);
+    fn TraceFrameSetEventCountRust(frame: *mut c_void);
+    fn TraceFrameRecordLRRust(frame: *mut c_void);
+    fn TraceFrameSetParamsRust(frame: *mut c_void, params: *const usize, param_count: u16);
+    fn OsTraceWriteOrSendEvent(frame: *const c_void);
 }
 
 #[no_mangle]
@@ -225,4 +256,80 @@ pub extern "C" fn OsTraceInitRust() -> u32 {
     }
 
     LOS_OK
+}
+
+#[repr(C, align(8))]
+struct TraceFrameBuf {
+    buf: [u8; TRACE_FRAME_BUF_MAX],
+}
+
+/// # Safety
+/// Caller must provide a valid `params` pointer when `param_count > 0`.
+#[no_mangle]
+pub unsafe extern "C" fn OsTraceHookRust(
+    event_type: u32,
+    identity: usize,
+    params: *const usize,
+    param_count: u16,
+) {
+    if unsafe { TraceIsTaskCreateOrPrioSetRust(event_type) } != 0 {
+        unsafe { TraceObjAddRust(event_type, identity) };
+    }
+
+    if unsafe { TraceIsEnabledRust() } == 0 {
+        return;
+    }
+    if (event_type & unsafe { TraceGetMaskRust() }) == 0 {
+        return;
+    }
+
+    let mut id = identity;
+    let mode = unsafe { TraceGetModeFlagRust(event_type) };
+    if mode == TRACE_HWI_FLAG {
+        if unsafe { TraceHwiFilterRust(identity as u32) } != 0 {
+            return;
+        }
+    } else if mode == TRACE_TASK_FLAG {
+        id = unsafe { TraceGetMaskTidRust(identity as u32) } as usize;
+    } else if unsafe { TraceIsMemInfoReqRust(event_type) } != 0 {
+        unsafe { TraceHandleMemInfoReqRust(identity) };
+        return;
+    }
+
+    let frame_size = unsafe { TraceFrameSizeRust() } as usize;
+    if frame_size > TRACE_FRAME_BUF_MAX {
+        return;
+    }
+
+    let mut frame = TraceFrameBuf {
+        buf: [0u8; TRACE_FRAME_BUF_MAX],
+    };
+    let frame_ptr = frame.buf.as_mut_ptr() as *mut c_void;
+
+    unsafe { TraceFrameClearRust(frame_ptr) };
+    let max_params = unsafe { TraceFrameMaxParamsRust() };
+    let use_params = if param_count > max_params {
+        max_params
+    } else {
+        param_count
+    };
+
+    let int_save = unsafe { TraceLockSaveRust() };
+    let cur_task = unsafe { TraceGetMaskTidRust(TraceGetCurTaskIdRust()) };
+    let cur_pid = unsafe { TraceGetCurPidRust() };
+    let cur_time = unsafe { TraceGetCyclesRust() };
+
+    unsafe {
+        TraceFrameSetBasicRust(frame_ptr, event_type, cur_task, cur_pid, id, cur_time);
+        TraceFrameSetCoreRust(frame_ptr, use_params);
+        TraceFrameSetEventCountRust(frame_ptr);
+        TraceFrameRecordLRRust(frame_ptr);
+        TraceUnlockRestoreRust(int_save);
+    }
+
+    if use_params > 0 && !params.is_null() {
+        TraceFrameSetParamsRust(frame_ptr, params, use_params);
+    }
+
+    OsTraceWriteOrSendEvent(frame_ptr as *const c_void);
 }

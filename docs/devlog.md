@@ -398,3 +398,9 @@ Prompt:
 
 改动:
 - hidumper DumpFaultLog Rust 行为与 C 侧一致（vfs 不支持与文件不存在的日志提示）
+
+Prompt:
+请按照1,3,2,4,5,6的顺序执行
+
+改动:
+- 迁移 trace OsTraceHook/SetFrame 事件路径到 Rust（新增 C 侧 frame/状态包装接口）

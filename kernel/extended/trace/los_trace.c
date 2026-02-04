@@ -206,6 +206,143 @@ VOID TraceLogCreateAgentFailRust(UINT32 ret)
 {
     TRACE_ERROR("trace init create agentTask error :0x%x\n", ret);
 }
+
+BOOL TraceIsEnabledRust(VOID)
+{
+    return g_enableTrace;
+}
+
+UINT32 TraceGetMaskRust(VOID)
+{
+    return g_traceMask;
+}
+
+UINT32 TraceGetModeFlagRust(UINT32 eventType)
+{
+    return TRACE_GET_MODE_FLAG(eventType);
+}
+
+BOOL TraceIsTaskCreateOrPrioSetRust(UINT32 eventType)
+{
+    return (eventType == TASK_CREATE) || (eventType == TASK_PRIOSET);
+}
+
+BOOL TraceIsMemInfoReqRust(UINT32 eventType)
+{
+    return (eventType == MEM_INFO_REQ);
+}
+
+BOOL TraceHwiFilterRust(UINT32 hwiNum)
+{
+    return OsTraceHwiFilter(hwiNum);
+}
+
+VOID TraceHandleMemInfoReqRust(UINTPTR identity)
+{
+    LOS_MEM_POOL_STATUS status;
+    LOS_MemInfoGet((VOID *)identity, &status);
+    LOS_TRACE(MEM_INFO, identity, status.totalUsedSize, status.totalFreeSize);
+}
+
+UINT32 TraceGetCurTaskIdRust(VOID)
+{
+    return LOS_CurTaskIDGet();
+}
+
+UINT32 TraceGetCurPidRust(VOID)
+{
+    return LOS_GetCurrProcessID();
+}
+
+UINT64 TraceGetCyclesRust(VOID)
+{
+    return HalClockGetCycles();
+}
+
+UINT32 TraceGetMaskTidRust(UINT32 taskId)
+{
+    return OsTraceGetMaskTid(taskId);
+}
+
+VOID TraceObjAddRust(UINT32 eventType, UINTPTR identity)
+{
+    OsTraceObjAdd(eventType, identity);
+}
+
+UINT32 TraceFrameSizeRust(VOID)
+{
+    return sizeof(TraceEventFrame);
+}
+
+UINT16 TraceFrameMaxParamsRust(VOID)
+{
+    return LOSCFG_TRACE_FRAME_MAX_PARAMS;
+}
+
+VOID TraceFrameClearRust(TraceEventFrame *frame)
+{
+    (VOID)memset_s(frame, sizeof(TraceEventFrame), 0, sizeof(TraceEventFrame));
+}
+
+VOID TraceFrameSetBasicRust(TraceEventFrame *frame, UINT32 eventType, UINT32 curTask, UINT32 curPid,
+    UINTPTR identity, UINT64 curTime)
+{
+    frame->eventType = eventType;
+    frame->curTask = curTask;
+    frame->curPid = curPid;
+    frame->identity = identity;
+    frame->curTime = curTime;
+}
+
+VOID TraceFrameSetCoreRust(TraceEventFrame *frame, UINT16 paramCount)
+{
+#ifdef LOSCFG_TRACE_FRAME_CORE_MSG
+    frame->core.cpuid      = ArchCurrCpuid();
+    frame->core.hwiActive  = OS_INT_ACTIVE ? TRUE : FALSE;
+    frame->core.taskLockCnt = MIN(OsSchedLockCountGet(), 0xF); /* taskLockCnt is 4 bits, max value = 0xF */
+    frame->core.paramCount = paramCount;
+#else
+    (VOID)frame;
+    (VOID)paramCount;
+#endif
+}
+
+VOID TraceFrameSetEventCountRust(TraceEventFrame *frame)
+{
+#ifdef LOSCFG_TRACE_FRAME_EVENT_COUNT
+    frame->eventCount = g_traceEventCount;
+    g_traceEventCount++;
+#else
+    (VOID)frame;
+#endif
+}
+
+VOID TraceFrameRecordLRRust(TraceEventFrame *frame)
+{
+#ifdef LOS_TRACE_FRAME_LR
+    LOS_RecordLR(frame->linkReg, LOS_TRACE_LR_RECORD, LOS_TRACE_LR_RECORD, LOS_TRACE_LR_IGNORE);
+#else
+    (VOID)frame;
+#endif
+}
+
+VOID TraceFrameSetParamsRust(TraceEventFrame *frame, const UINTPTR *params, UINT16 paramCount)
+{
+    UINT16 count = paramCount;
+    UINT16 i;
+
+    if (params == NULL) {
+        return;
+    }
+
+    if (count > LOSCFG_TRACE_FRAME_MAX_PARAMS) {
+        count = LOSCFG_TRACE_FRAME_MAX_PARAMS;
+    }
+
+    for (i = 0; i < count; i++) {
+        frame->params[i] = params[i];
+    }
+}
 #endif
 
 STATIC_INLINE BOOL OsTraceHwiFilter(UINT32 hwiNum)
@@ -280,6 +417,10 @@ VOID OsTraceSetObj(ObjData *obj, const LosTaskCB *tcb)
 
 VOID OsTraceHook(UINT32 eventType, UINTPTR identity, const UINTPTR *params, UINT16 paramCount)
 {
+#ifdef TRACE_USE_RUST
+    extern VOID OsTraceHookRust(UINT32 eventType, UINTPTR identity, const UINTPTR *params, UINT16 paramCount);
+    OsTraceHookRust(eventType, identity, params, paramCount);
+#else
     TraceEventFrame frame;
     if ((eventType == TASK_CREATE) || (eventType == TASK_PRIOSET)) {
         OsTraceObjAdd(eventType, identity); /* handle important obj info, these can not be filtered */
@@ -303,6 +444,7 @@ VOID OsTraceHook(UINT32 eventType, UINTPTR identity, const UINTPTR *params, UINT
         OsTraceSetFrame(&frame, eventType, id, params, paramCount);
         OsTraceWriteOrSendEvent(&frame);
     }
+#endif
 }
 
 BOOL OsTraceIsEnable(VOID)
