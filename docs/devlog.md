@@ -300,3 +300,9 @@ Prompt:
 
 改动:
 - 迁移 blackbox `SaveLastLog` 处理逻辑到 Rust
+
+Prompt:
+1
+
+改动:
+- 迁移 blackbox `SaveLogWithoutReset`/`FormatErrorInfo` 关键路径到 Rust

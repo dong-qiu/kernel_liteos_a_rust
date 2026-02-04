@@ -74,6 +74,11 @@ static void FormatErrorInfo(struct ErrorInfo *info,
                             const char module[MODULE_MAX_LEN],
                             const char errorDesc[ERROR_DESC_MAX_LEN])
 {
+#ifdef BLACKBOX_USE_RUST
+    extern void BlackboxFormatErrorInfoRust(struct ErrorInfo *info, const char *event,
+        const char *module, const char *errorDesc);
+    BlackboxFormatErrorInfoRust(info, event, module, errorDesc);
+#else
     if (info == NULL || event == NULL || module == NULL || errorDesc == NULL) {
         BBOX_PRINT_ERR("info: %p, event: %p, module: %p, errorDesc: %p!\n", info, event, module, errorDesc);
         return;
@@ -90,6 +95,7 @@ static void FormatErrorInfo(struct ErrorInfo *info,
         Min(strlen(errorDesc), sizeof(info->errorDesc) - 1)) != EOK) {
         BBOX_PRINT_ERR("info->errorDesc is not enough or strncpy_s failed!\n");
     }
+#endif
 }
 
 #ifdef LOSCFG_FS_VFS
@@ -227,14 +233,19 @@ static void SaveLogWithoutReset(struct ErrorInfo *info)
         (void)LOS_SemPost(g_opsListSem);
         return;
     }
-    if (CreateLogDir(LOSCFG_BLACKBOX_LOG_ROOT_PATH) != 0) {
-        (void)LOS_SemPost(g_opsListSem);
-        BBOX_PRINT_ERR("Create log dir [%s] failed!\n", LOSCFG_BLACKBOX_LOG_ROOT_PATH);
-        return;
-    }
     if (ops->ops.Dump == NULL && ops->ops.Reset == NULL) {
         (void)LOS_SemPost(g_opsListSem);
+#ifdef BLACKBOX_USE_RUST
+        extern int BlackboxSaveLogWithoutResetRust(const struct ErrorInfo *info, const char *logDir,
+            const char *filePath);
+        if (BlackboxSaveLogWithoutResetRust(info, LOSCFG_BLACKBOX_LOG_ROOT_PATH, USER_FAULT_LOG_PATH) == 0) {
+#else
+        if (CreateLogDir(LOSCFG_BLACKBOX_LOG_ROOT_PATH) != 0) {
+            BBOX_PRINT_ERR("Create log dir [%s] failed!\n", LOSCFG_BLACKBOX_LOG_ROOT_PATH);
+            return;
+        }
         if (SaveBasicErrorInfo(USER_FAULT_LOG_PATH, info) == 0) {
+#endif
             BBOX_PRINT_INFO("[%s] starts uploading event [%s]\n", info->module, info->event);
 #ifdef LOSCFG_FS_VFS
             (void)UploadEventByFile(USER_FAULT_LOG_PATH);
@@ -243,6 +254,11 @@ static void SaveLogWithoutReset(struct ErrorInfo *info)
 #endif
             BBOX_PRINT_INFO("[%s] ends uploading event [%s]\n", info->module, info->event);
         }
+        return;
+    }
+    if (CreateLogDir(LOSCFG_BLACKBOX_LOG_ROOT_PATH) != 0) {
+        (void)LOS_SemPost(g_opsListSem);
+        BBOX_PRINT_ERR("Create log dir [%s] failed!\n", LOSCFG_BLACKBOX_LOG_ROOT_PATH);
         return;
     }
     InvokeModuleOps(info, ops);

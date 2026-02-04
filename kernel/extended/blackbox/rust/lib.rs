@@ -70,6 +70,22 @@ pub extern "C" fn BlackboxIsLogPartReadyRust(current_ready: i32) -> i32 {
     }
 }
 
+unsafe fn copy_cstr(dst: &mut [u8], src: *const c_char) {
+    if dst.is_empty() {
+        return;
+    }
+    let mut i = 0usize;
+    while i + 1 < dst.len() {
+        let ch = unsafe { *src.add(i) };
+        if ch == 0 {
+            break;
+        }
+        dst[i] = ch as u8;
+        i += 1;
+    }
+    dst[i] = 0;
+}
+
 fn c_buf_len(buf: &[u8]) -> usize {
     for (idx, ch) in buf.iter().enumerate() {
         if *ch == 0 {
@@ -179,6 +195,45 @@ pub unsafe extern "C" fn BlackboxSaveFaultLogRust(
         let _ = BlackboxFullWriteFileRust(file_path, data_buf, buf_size, 1);
     }
     0
+}
+
+/// # Safety
+/// Caller must provide valid pointers for `info`, `log_dir`, and `file_path`.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxSaveLogWithoutResetRust(
+    info: *const ErrorInfo,
+    log_dir: *const c_char,
+    file_path: *const c_char,
+) -> i32 {
+    if info.is_null() || log_dir.is_null() || file_path.is_null() {
+        return -1;
+    }
+    if BlackboxCreateLogDirRust(log_dir) != 0 {
+        return -1;
+    }
+    BlackboxSaveBasicErrorInfoRust(file_path, info)
+}
+
+/// # Safety
+/// Caller must provide valid pointers for all parameters.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxFormatErrorInfoRust(
+    info: *mut ErrorInfo,
+    event: *const c_char,
+    module: *const c_char,
+    error_desc: *const c_char,
+) {
+    if info.is_null() || event.is_null() || module.is_null() || error_desc.is_null() {
+        return;
+    }
+
+    unsafe {
+        core::ptr::write_bytes(info as *mut u8, 0, size_of::<ErrorInfo>());
+        let info_ref = &mut *info;
+        copy_cstr(&mut info_ref.event, event);
+        copy_cstr(&mut info_ref.module, module);
+        copy_cstr(&mut info_ref.error_desc, error_desc);
+    }
 }
 
 /// # Safety
