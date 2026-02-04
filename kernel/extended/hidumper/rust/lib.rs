@@ -22,6 +22,9 @@ extern "C" {
     fn HidumperGetKernelFaultLogPath() -> *const c_char;
     fn HidumperGetUserFaultLogPath() -> *const c_char;
     fn HidumperOpenReadOnly(path: *const c_char) -> c_int;
+    fn HidumperIsVfsEnabled() -> c_int;
+    fn HidumperLogOpenFailed(path: *const c_char);
+    fn HidumperLogVfsUnsupported();
     fn HidumperClose(fd: c_int) -> c_int;
     fn HidumperRead(fd: c_int, buf: *mut c_char, len: u32) -> c_int;
     fn HidumperCmdDumpAll() -> u32;
@@ -179,7 +182,6 @@ pub extern "C" fn HiDumperDumpFaultLogRust() {
         let kernel = HidumperGetKernelFaultLogPath();
         let user = HidumperGetUserFaultLogPath();
         if kernel.is_null() || user.is_null() {
-            printk(UNSUPPORTED);
             return;
         }
         dump_file(kernel, KERNEL_FAULT_HEADER);
@@ -189,13 +191,16 @@ pub extern "C" fn HiDumperDumpFaultLogRust() {
 
 unsafe fn dump_file(path: *const c_char, header: &[u8]) {
     if path.is_null() {
-        printk(UNSUPPORTED);
         return;
     }
 
     let fd = HidumperOpenReadOnly(path);
     if fd < 0 {
-        printk(UNSUPPORTED);
+        if HidumperIsVfsEnabled() == 0 {
+            HidumperLogVfsUnsupported();
+        } else {
+            HidumperLogOpenFailed(path);
+        }
         return;
     }
 

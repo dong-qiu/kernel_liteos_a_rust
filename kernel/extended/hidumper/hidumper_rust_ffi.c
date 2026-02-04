@@ -158,6 +158,29 @@ int HidumperOpenReadOnly(const char *path)
 #endif
 }
 
+int HidumperIsVfsEnabled(void)
+{
+#ifdef LOSCFG_FS_VFS
+    return 1;
+#else
+    return 0;
+#endif
+}
+
+void HidumperLogOpenFailed(const char *path)
+{
+    if (path == NULL) {
+        PRINT_ERR("filePath is NULL!\n");
+        return;
+    }
+    PRINT_ERR("Open [%s] failed or there's no fault log!\n", path);
+}
+
+void HidumperLogVfsUnsupported(void)
+{
+    PRINT_ERR("LOSCFG_FS_VFS isn't defined!\n");
+}
+
 int HidumperClose(int fd)
 {
 #ifdef LOSCFG_FS_VFS
