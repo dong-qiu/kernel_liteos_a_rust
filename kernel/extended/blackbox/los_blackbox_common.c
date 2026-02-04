@@ -143,10 +143,18 @@ static int IsLogPartMounted(const char *devPoint, const char *mountPoint, struct
 
 bool IsLogPartReady(void)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxIsLogPartReadyRust(int currentReady);
+    if (!g_isLogPartReady) {
+        (void)foreach_mountpoint((foreach_mountpoint_t)IsLogPartMounted, LOSCFG_BLACKBOX_LOG_PART_MOUNT_POINT);
+    }
+    return (BlackboxIsLogPartReadyRust((int)g_isLogPartReady) != 0);
+#else
     if (!g_isLogPartReady) {
         (void)foreach_mountpoint((foreach_mountpoint_t)IsLogPartMounted, LOSCFG_BLACKBOX_LOG_PART_MOUNT_POINT);
     }
     return g_isLogPartReady;
+#endif
 }
 #else
 bool IsLogPartReady(void)

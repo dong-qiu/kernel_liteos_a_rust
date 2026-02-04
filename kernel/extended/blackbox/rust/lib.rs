@@ -43,3 +43,12 @@ pub extern "C" fn BlackboxGetLastLogInfoRust(log_buf: *const c_void, info: *mut 
     }
     0
 }
+
+#[no_mangle]
+pub extern "C" fn BlackboxIsLogPartReadyRust(current_ready: i32) -> i32 {
+    if current_ready != 0 {
+        1
+    } else {
+        0
+    }
+}

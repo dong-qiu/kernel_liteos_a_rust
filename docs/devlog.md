@@ -242,6 +242,12 @@ Prompt:
 - trace Makefile 从 Kconfig 读取 Rust 开关
 
 Prompt:
+1
+
+改动:
+- 迁移 blackbox `IsLogPartReady` 到 Rust（保留 mountpoint 检测在 C）
+
+Prompt:
 CI没有通过，请分析原因
 
 改动:
