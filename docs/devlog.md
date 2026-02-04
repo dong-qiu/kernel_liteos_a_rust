@@ -197,3 +197,9 @@ A
 
 改动:
 - 为 `kernel_rust` 的 unsafe API 补充 `# Safety` 文档以通过 clippy
+
+Prompt:
+1
+
+改动:
+- `kernel_rust` 增加 Errno/Result 类型与基础转换函数
