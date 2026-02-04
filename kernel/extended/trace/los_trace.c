@@ -69,6 +69,75 @@ LITE_OS_SEC_BSS STATIC TRACE_HWI_FILTER_HOOK g_traceHwiFilterHook = NULL;
 LITE_OS_SEC_BSS SPIN_LOCK_INIT(g_traceSpin);
 #endif
 
+#ifdef TRACE_USE_RUST
+UINT32 TraceLockSaveRust(VOID)
+{
+    UINT32 intSave;
+    TRACE_LOCK(intSave);
+    return intSave;
+}
+
+VOID TraceUnlockRestoreRust(UINT32 intSave)
+{
+    TRACE_UNLOCK(intSave);
+}
+
+UINT32 TraceGetStateRust(VOID)
+{
+    return (UINT32)g_traceState;
+}
+
+VOID TraceSetStateRust(UINT32 state)
+{
+    g_traceState = (enum TraceState)state;
+}
+
+VOID TraceSetEnableRust(BOOL enable)
+{
+    g_enableTrace = enable;
+}
+
+VOID TraceSetMaskRust(UINT32 mask)
+{
+    g_traceMask = mask;
+}
+
+VOID TraceNotifyStartRust(VOID)
+{
+    OsTraceNotifyStart();
+}
+
+VOID TraceNotifyStopRust(VOID)
+{
+    OsTraceNotifyStop();
+}
+
+VOID TraceRecordDumpRust(BOOL toClient)
+{
+    OsTraceRecordDump(toClient);
+}
+
+VOID TraceMemInfoReqRust(VOID)
+{
+    LOS_TRACE(MEM_INFO_REQ, m_aucSysMem0);
+}
+
+VOID TraceLogNotInitedRust(VOID)
+{
+    TRACE_ERROR("trace not inited, be sure LOS_TraceInit excute success\n");
+}
+
+VOID TraceLogDumpStateRust(UINT32 state)
+{
+    TRACE_ERROR("trace dump must after trace stopped , the current state is : %d\n", state);
+}
+
+UINT32 TraceGetErrnoTraceErrorStatusRust(VOID)
+{
+    return LOS_ERRNO_TRACE_ERROR_STATUS;
+}
+#endif
+
 STATIC_INLINE BOOL OsTraceHwiFilter(UINT32 hwiNum)
 {
     BOOL ret = ((hwiNum == NUM_HAL_INTERRUPT_UART) || (hwiNum == OS_TICK_INT_NUM));
@@ -318,6 +387,10 @@ LOS_ERREND:
 
 UINT32 LOS_TraceStart(VOID)
 {
+#ifdef TRACE_USE_RUST
+    extern UINT32 LOS_TraceStartRust(VOID);
+    return LOS_TraceStartRust();
+#else
     UINT32 intSave;
     UINT32 ret = LOS_OK;
 
@@ -343,10 +416,15 @@ UINT32 LOS_TraceStart(VOID)
 START_END:
     TRACE_UNLOCK(intSave);
     return ret;
+#endif
 }
 
 VOID LOS_TraceStop(VOID)
 {
+#ifdef TRACE_USE_RUST
+    extern VOID LOS_TraceStopRust(VOID);
+    LOS_TraceStopRust();
+#else
     UINT32 intSave;
 
     TRACE_LOCK(intSave);
@@ -359,20 +437,31 @@ VOID LOS_TraceStop(VOID)
     OsTraceNotifyStop();
 STOP_END:
     TRACE_UNLOCK(intSave);
+#endif
 }
 
 VOID LOS_TraceEventMaskSet(UINT32 mask)
 {
+#ifdef TRACE_USE_RUST
+    extern VOID LOS_TraceEventMaskSetRust(UINT32 mask);
+    LOS_TraceEventMaskSetRust(mask);
+#else
     g_traceMask = mask & EVENT_MASK;
+#endif
 }
 
 VOID LOS_TraceRecordDump(BOOL toClient)
 {
+#ifdef TRACE_USE_RUST
+    extern VOID LOS_TraceRecordDumpRust(BOOL toClient);
+    LOS_TraceRecordDumpRust(toClient);
+#else
     if (g_traceState != TRACE_STOPED) {
         TRACE_ERROR("trace dump must after trace stopped , the current state is : %d\n", g_traceState);
         return;
     }
     OsTraceRecordDump(toClient);
+#endif
 }
 
 OfflineHead *LOS_TraceRecordGet(VOID)

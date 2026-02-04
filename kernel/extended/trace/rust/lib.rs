@@ -22,6 +22,12 @@ const TRACE_CMD_SET_EVENT_MASK: u8 = 3;
 const TRACE_CMD_RECODE_DUMP: u8 = 4;
 const TRACE_CMD_MAX_CODE: u8 = 5;
 const LOS_OK: u32 = 0;
+const TRACE_UNINIT: u32 = 0;
+const TRACE_STARTED: u32 = 2;
+const TRACE_STOPED: u32 = 3;
+const TRACE_EVENT_MASK: u32 = 0xFFFFFFF0;
+const TRACE_ENABLE_TRUE: Bool = 1;
+const TRACE_ENABLE_FALSE: Bool = 0;
 
 extern "C" {
     fn LOS_TraceStart() -> u32;
@@ -30,6 +36,19 @@ extern "C" {
     fn LOS_TraceRecordDump(to_client: Bool);
     fn OsTraceDataWait() -> u32;
     fn OsTraceDataRecv(data: *mut u8, size: u32, timeout: u32) -> u32;
+    fn TraceLockSaveRust() -> u32;
+    fn TraceUnlockRestoreRust(state: u32);
+    fn TraceGetStateRust() -> u32;
+    fn TraceSetStateRust(state: u32);
+    fn TraceSetEnableRust(enable: Bool);
+    fn TraceSetMaskRust(mask: u32);
+    fn TraceNotifyStartRust();
+    fn TraceNotifyStopRust();
+    fn TraceRecordDumpRust(to_client: Bool);
+    fn TraceMemInfoReqRust();
+    fn TraceLogNotInitedRust();
+    fn TraceLogDumpStateRust(state: u32);
+    fn TraceGetErrnoTraceErrorStatusRust() -> u32;
 }
 
 #[no_mangle]
@@ -104,4 +123,61 @@ pub extern "C" fn TraceAgentRust() {
             OsTraceCmdHandleRust(&msg as *const TraceClientCmd as *const c_void);
         }
     }
+}
+
+#[no_mangle]
+pub extern "C" fn LOS_TraceStartRust() -> u32 {
+    let int_save = unsafe { TraceLockSaveRust() };
+    let state = unsafe { TraceGetStateRust() };
+    if state == TRACE_STARTED {
+        unsafe { TraceUnlockRestoreRust(int_save) };
+        return LOS_OK;
+    }
+    if state == TRACE_UNINIT {
+        unsafe {
+            TraceLogNotInitedRust();
+            TraceUnlockRestoreRust(int_save);
+            return TraceGetErrnoTraceErrorStatusRust();
+        }
+    }
+
+    unsafe {
+        TraceNotifyStartRust();
+        TraceSetEnableRust(TRACE_ENABLE_TRUE);
+        TraceSetStateRust(TRACE_STARTED);
+        TraceUnlockRestoreRust(int_save);
+        TraceMemInfoReqRust();
+    }
+    LOS_OK
+}
+
+#[no_mangle]
+pub extern "C" fn LOS_TraceStopRust() {
+    let int_save = unsafe { TraceLockSaveRust() };
+    if unsafe { TraceGetStateRust() } != TRACE_STARTED {
+        unsafe { TraceUnlockRestoreRust(int_save) };
+        return;
+    }
+
+    unsafe {
+        TraceSetEnableRust(TRACE_ENABLE_FALSE);
+        TraceSetStateRust(TRACE_STOPED);
+        TraceNotifyStopRust();
+        TraceUnlockRestoreRust(int_save);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn LOS_TraceEventMaskSetRust(mask: u32) {
+    unsafe { TraceSetMaskRust(mask & TRACE_EVENT_MASK) };
+}
+
+#[no_mangle]
+pub extern "C" fn LOS_TraceRecordDumpRust(to_client: Bool) {
+    let state = unsafe { TraceGetStateRust() };
+    if state != TRACE_STOPED {
+        unsafe { TraceLogDumpStateRust(state) };
+        return;
+    }
+    unsafe { TraceRecordDumpRust(to_client) };
 }
