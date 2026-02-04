@@ -163,6 +163,9 @@ static void Reset(struct ErrorInfo *info)
 
 static int GetLastLogInfo(struct ErrorInfo *info)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxGetLastLogInfoRust(const void *logBuf, void *info);
+#endif
     struct FaultLogInfo *pLogInfo = NULL;
 
     if (info == NULL) {
@@ -174,6 +177,9 @@ static int GetLastLogInfo(struct ErrorInfo *info)
         return -1;
     }
 
+#ifdef BLACKBOX_USE_RUST
+    return BlackboxGetLastLogInfoRust((const void *)g_logBuffer, (void *)info);
+#else
     pLogInfo = (struct FaultLogInfo *)g_logBuffer;
     if (memcmp(pLogInfo->flag, LOG_FLAG, strlen(LOG_FLAG)) == 0) {
         (void)memcpy_s(info, sizeof(*info), &pLogInfo->info, sizeof(pLogInfo->info));
@@ -181,6 +187,7 @@ static int GetLastLogInfo(struct ErrorInfo *info)
     }
 
     return -1;
+#endif
 }
 
 static int SaveLastLog(const char *logDir, struct ErrorInfo *info)

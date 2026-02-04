@@ -220,6 +220,14 @@ Prompt:
 - CI 增加 trace Rust build/clippy
 
 Prompt:
+1
+
+改动:
+- 迁移 blackbox 只读路径（GetLastLogInfo）到 Rust
+- blackbox Makefile 支持 `BLACKBOX_USE_RUST`
+- CI 增加 blackbox Rust build/clippy
+
+Prompt:
 CI没有通过，请分析原因
 
 改动:
