@@ -1,6 +1,8 @@
 #![no_std]
 
+use core::cmp::min;
 use core::ffi::{c_char, c_void};
+use core::mem::size_of;
 
 extern "C" {
     fn BlackboxAccess(path: *const c_char) -> i32;
@@ -175,6 +177,46 @@ pub unsafe extern "C" fn BlackboxSaveFaultLogRust(
     let _ = BlackboxSaveBasicErrorInfoRust(file_path, info);
     if !data_buf.is_null() && buf_size > 0 {
         let _ = BlackboxFullWriteFileRust(file_path, data_buf, buf_size, 1);
+    }
+    0
+}
+
+/// # Safety
+/// Caller must provide valid pointers for `log_buf`, `info`, and `file_path`.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxSaveLastLogRust(
+    log_buf: *mut c_void,
+    log_size: usize,
+    info: *const ErrorInfo,
+    file_path: *const c_char,
+) -> i32 {
+    if log_buf.is_null() || info.is_null() || file_path.is_null() {
+        return -1;
+    }
+    if log_size < size_of::<FaultLogInfo>() {
+        return -1;
+    }
+
+    let log = log_buf as *const FaultLogInfo;
+    let flag = unsafe { &(*log).flag };
+    let mut ok = true;
+    for i in 0..LOG_FLAG.len() {
+        if flag[i] != LOG_FLAG[i] {
+            ok = false;
+            break;
+        }
+    }
+
+    if ok {
+        let len = unsafe { (*log).len };
+        let payload = log_size.saturating_sub(size_of::<FaultLogInfo>());
+        let use_len = if len <= 0 { 0 } else { min(payload, len as usize) };
+        let data_ptr = unsafe { (log_buf as *const u8).add(size_of::<FaultLogInfo>()) };
+        let _ = BlackboxSaveFaultLogRust(file_path, data_ptr, use_len, info);
+    }
+
+    unsafe {
+        core::ptr::write_bytes(log_buf as *mut u8, 0, log_size);
     }
     0
 }

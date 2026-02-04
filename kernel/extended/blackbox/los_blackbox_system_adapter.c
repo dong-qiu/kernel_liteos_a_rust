@@ -199,8 +199,6 @@ static int GetLastLogInfo(struct ErrorInfo *info)
 static int SaveLastLog(const char *logDir, struct ErrorInfo *info)
 {
 #ifdef LOSCFG_FS_VFS
-    struct FaultLogInfo *pLogInfo = NULL;
-
     if (logDir == NULL || info == NULL) {
         BBOX_PRINT_ERR("logDir: %p, info: %p!\n", logDir, info);
         return -1;
@@ -210,12 +208,23 @@ static int SaveLastLog(const char *logDir, struct ErrorInfo *info)
         return -1;
     }
 
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxSaveLastLogRust(void *logBuf, size_t logSize, const struct ErrorInfo *info,
+        const char *filePath);
+    int ret = BlackboxSaveLastLogRust((void *)g_logBuffer, LOSCFG_BLACKBOX_LOG_SIZE, info,
+        KERNEL_FAULT_LOG_PATH);
+    if (ret != 0) {
+        return ret;
+    }
+#else
+    struct FaultLogInfo *pLogInfo = NULL;
     pLogInfo = (struct FaultLogInfo *)g_logBuffer;
     if (memcmp(pLogInfo->flag, LOG_FLAG, strlen(LOG_FLAG)) == 0) {
         SaveFaultLog(KERNEL_FAULT_LOG_PATH, g_logBuffer + sizeof(*pLogInfo),
             Min(LOSCFG_BLACKBOX_LOG_SIZE - sizeof(*pLogInfo), pLogInfo->len), info);
     }
     (void)memset_s(g_logBuffer, LOSCFG_BLACKBOX_LOG_SIZE, 0, LOSCFG_BLACKBOX_LOG_SIZE);
+#endif
     BBOX_PRINT_INFO("[%s] starts uploading event [%s]\n", info->module, info->event);
     (void)UploadEventByFile(KERNEL_FAULT_LOG_PATH);
     BBOX_PRINT_INFO("[%s] ends uploading event [%s]\n", info->module, info->event);
