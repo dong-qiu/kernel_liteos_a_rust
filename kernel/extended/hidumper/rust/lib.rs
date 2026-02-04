@@ -3,10 +3,9 @@
 use core::ffi::{c_char, c_int};
 use core::panic::PanicInfo;
 use core::ptr;
-use kernel_rust::log::printk;
+use kernel_rust::log::{printk, printk_cstr};
 
 extern "C" {
-    fn HidumperPrintk(msg: *const c_char);
     fn HidumperShellCmdUname() -> c_int;
     fn HidumperShellCmdSystemInfo() -> c_int;
     fn HidumperShellCmdFree() -> c_int;
@@ -194,7 +193,7 @@ unsafe fn dump_file(path: *const c_char, header: &[u8]) {
             break;
         }
         buf[n as usize] = 0;
-        HidumperPrintk(buf.as_ptr() as *const c_char);
+        printk_cstr(buf.as_ptr() as *const c_char);
     }
 
     let _ = HidumperClose(fd);

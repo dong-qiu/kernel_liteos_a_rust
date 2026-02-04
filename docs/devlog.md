@@ -172,6 +172,14 @@ Prompt:
 - CI 增加 `kernel/rust` 的 build/clippy
 
 Prompt:
+1
+
+改动:
+- `kernel_rust` 日志改用通用 `KernelPrintk`
+- 新增 `kernel/common/los_rust.c` 提供通用打印接口
+- hidumper Rust 使用 `kernel_rust::log::printk_cstr` 打印 C 字符串
+
+Prompt:
 CI出现问题，请分析原因
 
 改动:
