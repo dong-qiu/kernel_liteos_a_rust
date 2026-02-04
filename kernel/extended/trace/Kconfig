@@ -76,3 +76,10 @@ config TRACE_NO_CONTROL
     bool "No Control"
 
 endchoice
+
+config TRACE_USE_RUST
+    bool "Use Rust for trace control agent"
+    default n
+    depends on TRACE_CONTROL_AGENT
+    help
+      Answer Y to enable Rust implementation for trace control command handling.

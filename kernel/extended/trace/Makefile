@@ -58,7 +58,7 @@ endif
 
 LOCAL_FLAGS := $(LOCAL_INCLUDE)
 
-TRACE_USE_RUST ?= n
+TRACE_USE_RUST ?= $(LOSCFG_TRACE_USE_RUST)
 RUSTC ?= rustc
 RUSTFLAGS ?= -C panic=abort -C opt-level=2 -C relocation-model=static
 RUST_TARGET ?= $(if $(LOSCFG_LLVM_TARGET),$(LOSCFG_LLVM_TARGET:"%"=%),$(LITEOSTOPDIR)/targets/armv7a-none-eabi.json)

@@ -235,6 +235,13 @@ Prompt:
 - blackbox Makefile 从 Kconfig 读取 Rust 开关
 
 Prompt:
+1
+
+改动:
+- Kconfig 增加 `TRACE_USE_RUST` 选项
+- trace Makefile 从 Kconfig 读取 Rust 开关
+
+Prompt:
 CI没有通过，请分析原因
 
 改动:
