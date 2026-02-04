@@ -318,3 +318,9 @@ Prompt:
 
 改动:
 - 迁移 cpup shell 命令到 Rust（新增 Rust crate 与 C FFI）
+
+Prompt:
+CI没有通过，请分析原因
+
+改动:
+- 修复 cpup Rust 编译报错（match 字节串长度不一致）

@@ -7,6 +7,12 @@ const CPUP_LAST_TEN_SECONDS: u16 = 0;
 const CPUP_LAST_ONE_SECONDS: u16 = 1;
 const CPUP_ALL_TIME: u16 = 0xffff;
 const LOS_OK: u32 = 0;
+const SYS_CPU_10S: &[u8] = b"\nSysCpuUsage in 10s: ";
+const SYS_CPU_1S: &[u8] = b"\nSysCpuUsage in 1s: ";
+const SYS_CPU_ALL: &[u8] = b"\nSysCpuUsage in all time: ";
+const PID_CPU_10S: &[u8] = b" CpuUsage in 10s: ";
+const PID_CPU_1S: &[u8] = b" CpuUsage in 1s: ";
+const PID_CPU_ALL: &[u8] = b" CpuUsage in all time: ";
 
 extern "C" {
     fn LOS_HistorySysCpuUsage(mode: u16) -> u32;
@@ -171,10 +177,10 @@ fn print_unknown_pid(pid: u32) {
 }
 
 fn print_sys_usage(mode: u16) {
-    let prefix = match mode {
-        CPUP_LAST_TEN_SECONDS => b"\nSysCpuUsage in 10s: ",
-        CPUP_LAST_ONE_SECONDS => b"\nSysCpuUsage in 1s: ",
-        _ => b"\nSysCpuUsage in all time: ",
+    let prefix: &[u8] = match mode {
+        CPUP_LAST_TEN_SECONDS => SYS_CPU_10S,
+        CPUP_LAST_ONE_SECONDS => SYS_CPU_1S,
+        _ => SYS_CPU_ALL,
     };
     let usage = unsafe { LOS_HistorySysCpuUsage(mode) };
     let precision = unsafe { CpupGetPrecisionMult() };
@@ -192,10 +198,10 @@ fn print_sys_usage(mode: u16) {
 }
 
 fn print_pid_usage(mode: u16, pid: u32) {
-    let suffix = match mode {
-        CPUP_LAST_TEN_SECONDS => b" CpuUsage in 10s: ",
-        CPUP_LAST_ONE_SECONDS => b" CpuUsage in 1s: ",
-        _ => b" CpuUsage in all time: ",
+    let suffix: &[u8] = match mode {
+        CPUP_LAST_TEN_SECONDS => PID_CPU_10S,
+        CPUP_LAST_ONE_SECONDS => PID_CPU_1S,
+        _ => PID_CPU_ALL,
     };
     let usage = unsafe { LOS_HistoryProcessCpuUsage(pid, mode) };
     let precision = unsafe { CpupGetPrecisionMult() };
