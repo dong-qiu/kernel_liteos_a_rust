@@ -248,6 +248,12 @@ Prompt:
 - 迁移 blackbox `IsLogPartReady` 到 Rust（保留 mountpoint 检测在 C）
 
 Prompt:
+1
+
+改动:
+- `kernel_rust` 增加 RAII 内存封装 `KernelBox<T>`
+
+Prompt:
 CI没有通过，请分析原因
 
 改动:
