@@ -324,3 +324,9 @@ CI没有通过，请分析原因
 
 改动:
 - 修复 cpup Rust 编译报错（match 字节串长度不一致）
+
+Prompt:
+问题还是没有修复，请继续分析原因
+
+改动:
+- 修复 cpup Rust clippy 报错（多余 cast、raw pointer safety）

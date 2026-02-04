@@ -41,7 +41,7 @@ fn cstr_eq(ptr: *const c_char, bytes: &[u8]) -> bool {
     let mut idx = 0usize;
     unsafe {
         while idx < bytes.len() {
-            if *ptr.add(idx) as u8 != bytes[idx] {
+            if *ptr.add(idx) != bytes[idx] {
                 return false;
             }
             idx += 1;
@@ -63,10 +63,10 @@ fn parse_u32_base0(ptr: *const c_char) -> Result<u32, ()> {
     let mut start = 0usize;
     unsafe {
         let first = *ptr;
-        if first as u8 == b'0' {
+        if first == b'0' {
             if len >= 2 {
                 let second = *ptr.add(1);
-                if second as u8 == b'x' || second as u8 == b'X' {
+                if second == b'x' || second == b'X' {
                     base = 16;
                     start = 2;
                     if start >= len {
@@ -85,7 +85,7 @@ fn parse_u32_base0(ptr: *const c_char) -> Result<u32, ()> {
     let mut idx = start;
     unsafe {
         while idx < len {
-            let ch = *ptr.add(idx) as u8;
+            let ch = *ptr.add(idx);
             let digit = match ch {
                 b'0'..=b'9' => (ch - b'0') as u32,
                 b'a'..=b'f' => (10 + (ch - b'a')) as u32,
@@ -220,8 +220,10 @@ fn print_pid_usage(mode: u16, pid: u32) {
     unsafe { printk_cstr(buf.as_ptr() as *const c_char) };
 }
 
+/// # Safety
+/// Caller must provide valid `argv` pointers when `argc > 0`.
 #[no_mangle]
-pub extern "C" fn OsShellCmdCpupRust(argc: i32, argv: *const *const c_char) -> u32 {
+pub unsafe extern "C" fn OsShellCmdCpupRust(argc: i32, argv: *const *const c_char) -> u32 {
     if argc <= 0 {
         print_sys_usage(CPUP_LAST_TEN_SECONDS);
         return LOS_OK;
@@ -230,7 +232,7 @@ pub extern "C" fn OsShellCmdCpupRust(argc: i32, argv: *const *const c_char) -> u
         return LOS_OK;
     }
 
-    let arg0 = unsafe { *argv };
+    let arg0 = *argv;
     if cstr_eq(arg0, b"-h") || cstr_eq(arg0, b"--help") {
         print_help();
         return LOS_OK;
@@ -254,7 +256,7 @@ pub extern "C" fn OsShellCmdCpupRust(argc: i32, argv: *const *const c_char) -> u
         return LOS_OK;
     }
 
-    let arg1 = unsafe { *argv.add(1) };
+    let arg1 = *argv.add(1);
     let pid = match parse_u32_base0(arg1) {
         Ok(v) => v,
         Err(_) => {
