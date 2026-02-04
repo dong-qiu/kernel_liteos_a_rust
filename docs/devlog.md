@@ -282,3 +282,9 @@ CI没有通过，请帮忙修复
 
 改动:
 - 修复 blackbox Rust clippy 报错（unnecessary cast）
+
+Prompt:
+请继续迁移任务，看看还有哪些遗留任务
+
+改动:
+- 迁移 blackbox 文件写入链路到 Rust（FullWriteFile/SaveBasicErrorInfo/SaveFaultLog）

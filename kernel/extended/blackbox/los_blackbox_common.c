@@ -56,6 +56,14 @@ static bool g_isLogPartReady = FALSE;
 /* ------------ function definitions ------------ */
 int FullWriteFile(const char *filePath, const char *buf, size_t bufSize, int isAppend)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxFullWriteFileRust(const char *filePath, const void *buf, size_t bufSize, int isAppend);
+    int ret = BlackboxFullWriteFileRust(filePath, buf, bufSize, isAppend);
+    if (ret != 0) {
+        BBOX_PRINT_ERR("write file [%s] failed!\n", filePath);
+    }
+    return ret;
+#else
 #ifdef LOSCFG_FS_VFS
     int fd;
     int totalToWrite = (int)bufSize;
@@ -97,10 +105,19 @@ int FullWriteFile(const char *filePath, const char *buf, size_t bufSize, int isA
     (VOID)isAppend;
     return -1;
 #endif
+#endif
 }
 
 int SaveBasicErrorInfo(const char *filePath, const struct ErrorInfo *info)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxSaveBasicErrorInfoRust(const char *filePath, const struct ErrorInfo *info);
+    int ret = BlackboxSaveBasicErrorInfoRust(filePath, info);
+    if (ret != 0) {
+        BBOX_PRINT_ERR("SaveBasicErrorInfo failed!\n");
+    }
+    return ret;
+#else
     char *buf = NULL;
 
     if (filePath == NULL || info == NULL) {
@@ -125,6 +142,7 @@ int SaveBasicErrorInfo(const char *filePath, const struct ErrorInfo *info)
     (void)LOS_MemFree(m_aucSysMem1, buf);
 
     return 0;
+#endif
 }
 
 #ifdef LOSCFG_FS_VFS
@@ -178,6 +196,32 @@ int BlackboxMkdir(const char *path)
         return -1;
     }
     return mkdir(path, BBOX_DIR_MODE);
+}
+
+int BlackboxOpenForWrite(const char *path, int isAppend)
+{
+    if (path == NULL) {
+        return -1;
+    }
+    return open(path, O_CREAT | O_RDWR | (isAppend ? O_APPEND : O_TRUNC), BBOX_FILE_MODE);
+}
+
+int BlackboxWrite(int fd, const void *buf, size_t len)
+{
+    if (buf == NULL) {
+        return -1;
+    }
+    return write(fd, buf, len);
+}
+
+int BlackboxFsync(int fd)
+{
+    return fsync(fd);
+}
+
+int BlackboxClose(int fd)
+{
+    return close(fd);
 }
 
 int CreateNewDir(const char *dirPath)
@@ -254,9 +298,54 @@ int CreateLogDir(const char *dirPath)
 #endif
 }
 #else
+int BlackboxAccess(const char *path)
+{
+    (VOID)path;
+    return -1;
+}
+
+int BlackboxMkdir(const char *path)
+{
+    (VOID)path;
+    return -1;
+}
+
+int BlackboxOpenForWrite(const char *path, int isAppend)
+{
+    (VOID)path;
+    (VOID)isAppend;
+    return -1;
+}
+
+int BlackboxWrite(int fd, const void *buf, size_t len)
+{
+    (VOID)fd;
+    (VOID)buf;
+    (VOID)len;
+    return -1;
+}
+
+int BlackboxFsync(int fd)
+{
+    (VOID)fd;
+    return -1;
+}
+
+int BlackboxClose(int fd)
+{
+    (VOID)fd;
+    return -1;
+}
+
+int CreateNewDir(const char *dirPath)
+{
+    (VOID)dirPath;
+    return -1;
+}
+
 int CreateLogDir(const char *dirPath)
 {
-    (void)dirPath;
+    (VOID)dirPath;
     return -1;
 }
 #endif

@@ -67,8 +67,14 @@ static char *g_logBuffer = NULL;
 /* ------------ function definitions ------------ */
 static void SaveFaultLog(const char *filePath, const char *dataBuf, size_t bufSize, struct ErrorInfo *info)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxSaveFaultLogRust(const char *filePath, const void *dataBuf, size_t bufSize,
+        const struct ErrorInfo *info);
+    (void)BlackboxSaveFaultLogRust(filePath, dataBuf, bufSize, info);
+#else
     (void)SaveBasicErrorInfo(filePath, info);
     (void)FullWriteFile(filePath, dataBuf, bufSize, 1);
+#endif
 }
 
 #ifdef LOSCFG_SAVE_EXCINFO

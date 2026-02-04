@@ -5,9 +5,19 @@ use core::ffi::{c_char, c_void};
 extern "C" {
     fn BlackboxAccess(path: *const c_char) -> i32;
     fn BlackboxMkdir(path: *const c_char) -> i32;
+    fn BlackboxOpenForWrite(path: *const c_char, is_append: i32) -> i32;
+    fn BlackboxWrite(fd: i32, buf: *const u8, len: usize) -> i32;
+    fn BlackboxFsync(fd: i32) -> i32;
+    fn BlackboxClose(fd: i32) -> i32;
+    fn IsLogPartReady() -> bool;
 }
 
 const LOG_FLAG: &[u8; 7] = b"GOODLOG";
+const ERROR_INFO_HEADER: &[u8] = b"#### error info ####\n";
+const ERROR_INFO_EVENT: &[u8] = b"event: ";
+const ERROR_INFO_MODULE: &[u8] = b"\nmodule: ";
+const ERROR_INFO_DESC: &[u8] = b"\nerrorDesc: ";
+const ERROR_INFO_TAIL: &[u8] = b"\n";
 
 #[repr(C)]
 struct ErrorInfo {
@@ -56,6 +66,117 @@ pub extern "C" fn BlackboxIsLogPartReadyRust(current_ready: i32) -> i32 {
     } else {
         0
     }
+}
+
+fn c_buf_len(buf: &[u8]) -> usize {
+    for (idx, ch) in buf.iter().enumerate() {
+        if *ch == 0 {
+            return idx;
+        }
+    }
+    buf.len()
+}
+
+unsafe fn write_all(fd: i32, mut ptr: *const u8, mut len: usize) -> bool {
+    while len > 0 {
+        let written = BlackboxWrite(fd, ptr, len);
+        if written <= 0 {
+            return false;
+        }
+        let step = written as usize;
+        len -= step;
+        ptr = ptr.add(step);
+    }
+    true
+}
+
+fn write_all_slice(fd: i32, buf: &[u8]) -> bool {
+    unsafe { write_all(fd, buf.as_ptr(), buf.len()) }
+}
+
+/// # Safety
+/// Caller must provide valid pointers for `file_path` and `buf`.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxFullWriteFileRust(
+    file_path: *const c_char,
+    buf: *const u8,
+    buf_size: usize,
+    is_append: i32,
+) -> i32 {
+    if file_path.is_null() || buf.is_null() || buf_size == 0 {
+        return -1;
+    }
+    if !IsLogPartReady() {
+        return -1;
+    }
+
+    let fd = BlackboxOpenForWrite(file_path, is_append);
+    if fd < 0 {
+        return -1;
+    }
+
+    let ok = write_all(fd, buf, buf_size);
+    let _ = BlackboxFsync(fd);
+    let _ = BlackboxClose(fd);
+    if ok { 0 } else { -1 }
+}
+
+/// # Safety
+/// Caller must provide a valid, null-terminated C string pointer.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxSaveBasicErrorInfoRust(
+    file_path: *const c_char,
+    info: *const ErrorInfo,
+) -> i32 {
+    if file_path.is_null() || info.is_null() {
+        return -1;
+    }
+    if !IsLogPartReady() {
+        return 0;
+    }
+
+    let fd = BlackboxOpenForWrite(file_path, 0);
+    if fd < 0 {
+        return 0;
+    }
+
+    let info_ref = unsafe { &*info };
+    let event_len = c_buf_len(&info_ref.event);
+    let module_len = c_buf_len(&info_ref.module);
+    let desc_len = c_buf_len(&info_ref.error_desc);
+
+    let _ = write_all_slice(fd, ERROR_INFO_HEADER);
+    let _ = write_all_slice(fd, ERROR_INFO_EVENT);
+    let _ = write_all_slice(fd, &info_ref.event[..event_len]);
+    let _ = write_all_slice(fd, ERROR_INFO_MODULE);
+    let _ = write_all_slice(fd, &info_ref.module[..module_len]);
+    let _ = write_all_slice(fd, ERROR_INFO_DESC);
+    let _ = write_all_slice(fd, &info_ref.error_desc[..desc_len]);
+    let _ = write_all_slice(fd, ERROR_INFO_TAIL);
+
+    let _ = BlackboxFsync(fd);
+    let _ = BlackboxClose(fd);
+    0
+}
+
+/// # Safety
+/// Caller must provide valid pointers for `file_path`, `data_buf`, and `info`.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxSaveFaultLogRust(
+    file_path: *const c_char,
+    data_buf: *const u8,
+    buf_size: usize,
+    info: *const ErrorInfo,
+) -> i32 {
+    if file_path.is_null() || info.is_null() {
+        return -1;
+    }
+
+    let _ = BlackboxSaveBasicErrorInfoRust(file_path, info);
+    if !data_buf.is_null() && buf_size > 0 {
+        let _ = BlackboxFullWriteFileRust(file_path, data_buf, buf_size, 1);
+    }
+    0
 }
 
 /// # Safety
