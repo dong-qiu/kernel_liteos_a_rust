@@ -336,3 +336,9 @@ Prompt:
 
 改动:
 - 迁移 blackbox `SaveLogWithReset` 路径到 Rust
+
+Prompt:
+1
+
+改动:
+- 迁移 blackbox 核心 `SaveLastLog` 控制流到 Rust

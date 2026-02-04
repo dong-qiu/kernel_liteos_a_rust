@@ -14,6 +14,11 @@ extern "C" {
     fn IsLogPartReady() -> bool;
     fn BlackboxInvokeModuleOpsForInfo(info: *const ErrorInfo) -> i32;
     fn BlackboxSysRebootAndLog() -> i32;
+    fn BlackboxGetOpsList() -> *mut LosDlList;
+    fn BlackboxOpsListSemPend() -> u32;
+    fn BlackboxOpsListSemPost() -> u32;
+    fn CreateLogDir(dir_path: *const c_char) -> i32;
+    fn UploadEventByFile(file_path: *const c_char) -> i32;
 }
 
 const LOG_FLAG: &[u8; 7] = b"GOODLOG";
@@ -35,6 +40,27 @@ struct FaultLogInfo {
     flag: [u8; 8],
     len: i32,
     info: ErrorInfo,
+}
+
+#[repr(C)]
+struct LosDlList {
+    pst_prev: *mut LosDlList,
+    pst_next: *mut LosDlList,
+}
+
+#[repr(C)]
+struct ModuleOps {
+    module: [u8; 32],
+    dump: Option<unsafe extern "C" fn(*const c_char, *mut ErrorInfo)>,
+    reset: Option<unsafe extern "C" fn(*mut ErrorInfo)>,
+    get_last_log_info: Option<unsafe extern "C" fn(*mut ErrorInfo) -> i32>,
+    save_last_log: Option<unsafe extern "C" fn(*const c_char, *mut ErrorInfo) -> i32>,
+}
+
+#[repr(C)]
+struct BBoxOps {
+    ops_list: LosDlList,
+    ops: ModuleOps,
 }
 
 #[no_mangle]
@@ -288,6 +314,57 @@ pub unsafe extern "C" fn BlackboxSaveLastLogRust(
     unsafe {
         core::ptr::write_bytes(log_buf as *mut u8, 0, log_size);
     }
+    0
+}
+
+/// # Safety
+/// Caller must provide valid pointers for `log_dir` and `kernel_fault_path`.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
+    log_dir: *const c_char,
+    kernel_fault_path: *const c_char,
+) -> i32 {
+    if log_dir.is_null() || kernel_fault_path.is_null() {
+        return -1;
+    }
+    if BlackboxOpsListSemPend() != 0 {
+        return -1;
+    }
+    if CreateLogDir(log_dir) != 0 {
+        let _ = BlackboxOpsListSemPost();
+        return -1;
+    }
+
+    let head = BlackboxGetOpsList();
+    if head.is_null() {
+        let _ = BlackboxOpsListSemPost();
+        return -1;
+    }
+
+    let mut node = unsafe { (*head).pst_next };
+    while node != head {
+        let ops = node as *mut BBoxOps;
+        if !ops.is_null() {
+            let module_ops = unsafe { &(*ops).ops };
+            if let (Some(get_info), Some(save_log)) =
+                (module_ops.get_last_log_info, module_ops.save_last_log)
+            {
+                let mut info = ErrorInfo {
+                    event: [0; 32],
+                    module: [0; 32],
+                    error_desc: [0; 512],
+                };
+                if unsafe { get_info(&mut info as *mut ErrorInfo) } == 0 {
+                    if unsafe { save_log(log_dir, &mut info as *mut ErrorInfo) } == 0 {
+                        let _ = unsafe { UploadEventByFile(kernel_fault_path) };
+                    }
+                }
+            }
+        }
+        node = unsafe { (*node).pst_next };
+    }
+
+    let _ = BlackboxOpsListSemPost();
     0
 }
 

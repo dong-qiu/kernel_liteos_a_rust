@@ -163,6 +163,12 @@ static void InvokeModuleOps(struct ErrorInfo *info, const BBoxOps *ops)
 
 static void SaveLastLog(const char *logDir)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxSaveLastLogCoreRust(const char *logDir, const char *kernelFaultPath);
+    if (BlackboxSaveLastLogCoreRust(logDir, KERNEL_FAULT_LOG_PATH) != 0) {
+        BBOX_PRINT_ERR("SaveLastLog failed!\n");
+    }
+#else
     struct ErrorInfo *info = NULL;
     BBoxOps *ops = NULL;
 
@@ -214,6 +220,7 @@ static void SaveLastLog(const char *logDir)
     }
     (void)LOS_SemPost(g_opsListSem);
     (void)LOS_MemFree(m_aucSysMem1, info);
+#endif
 }
 
 static void SaveLogWithoutReset(struct ErrorInfo *info)
@@ -286,6 +293,21 @@ int BlackboxSysRebootAndLog(void)
     int ret = SysReboot(0, 0, RB_AUTOBOOT);
     BBOX_PRINT_INFO("SysReboot, ret: %d\n", ret);
     return ret;
+}
+
+LOS_DL_LIST *BlackboxGetOpsList(void)
+{
+    return &g_opsList;
+}
+
+UINT32 BlackboxOpsListSemPend(void)
+{
+    return LOS_SemPend(g_opsListSem, LOS_WAIT_FOREVER);
+}
+
+UINT32 BlackboxOpsListSemPost(void)
+{
+    return LOS_SemPost(g_opsListSem);
 }
 #endif
 
