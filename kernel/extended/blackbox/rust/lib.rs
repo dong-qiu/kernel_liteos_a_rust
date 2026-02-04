@@ -20,7 +20,7 @@ const ERROR_INFO_DESC: &[u8] = b"\nerrorDesc: ";
 const ERROR_INFO_TAIL: &[u8] = b"\n";
 
 #[repr(C)]
-struct ErrorInfo {
+pub struct ErrorInfo {
     event: [u8; 32],
     module: [u8; 32],
     error_desc: [u8; 512],

@@ -288,3 +288,9 @@ Prompt:
 
 改动:
 - 迁移 blackbox 文件写入链路到 Rust（FullWriteFile/SaveBasicErrorInfo/SaveFaultLog）
+
+Prompt:
+CI没有通过，请分析原因
+
+改动:
+- 修复 blackbox Rust `private_interfaces` 编译报错（公开 `ErrorInfo`）
