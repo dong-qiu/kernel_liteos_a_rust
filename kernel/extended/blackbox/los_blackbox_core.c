@@ -265,6 +265,30 @@ static void SaveLogWithoutReset(struct ErrorInfo *info)
     (void)LOS_SemPost(g_opsListSem);
 }
 
+#ifdef BLACKBOX_USE_RUST
+int BlackboxInvokeModuleOpsForInfo(const struct ErrorInfo *info)
+{
+    BBoxOps *ops = NULL;
+
+    if (info == NULL) {
+        BBOX_PRINT_ERR("info is NULL!\n");
+        return -1;
+    }
+    if (!FindModuleOps((struct ErrorInfo *)info, &ops)) {
+        return -1;
+    }
+    InvokeModuleOps((struct ErrorInfo *)info, ops);
+    return 0;
+}
+
+int BlackboxSysRebootAndLog(void)
+{
+    int ret = SysReboot(0, 0, RB_AUTOBOOT);
+    BBOX_PRINT_INFO("SysReboot, ret: %d\n", ret);
+    return ret;
+}
+#endif
+
 static void SaveTempErrorLog(void)
 {
     if (LOS_SemPend(g_tempErrInfoSem, LOS_WAIT_FOREVER) != LOS_OK) {
@@ -284,6 +308,10 @@ static void SaveTempErrorLog(void)
 
 static void SaveLogWithReset(struct ErrorInfo *info)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern void BlackboxSaveLogWithResetRust(const struct ErrorInfo *info);
+    BlackboxSaveLogWithResetRust(info);
+#else
     int ret;
     BBoxOps *ops = NULL;
 
@@ -298,6 +326,7 @@ static void SaveLogWithReset(struct ErrorInfo *info)
     InvokeModuleOps(info, ops);
     ret = SysReboot(0, 0, RB_AUTOBOOT);
     BBOX_PRINT_INFO("SysReboot, ret: %d\n", ret);
+#endif
 }
 
 static void SaveTempErrorInfo(const char event[EVENT_MAX_LEN],

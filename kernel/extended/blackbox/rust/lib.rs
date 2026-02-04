@@ -12,6 +12,8 @@ extern "C" {
     fn BlackboxFsync(fd: i32) -> i32;
     fn BlackboxClose(fd: i32) -> i32;
     fn IsLogPartReady() -> bool;
+    fn BlackboxInvokeModuleOpsForInfo(info: *const ErrorInfo) -> i32;
+    fn BlackboxSysRebootAndLog() -> i32;
 }
 
 const LOG_FLAG: &[u8; 7] = b"GOODLOG";
@@ -212,6 +214,19 @@ pub unsafe extern "C" fn BlackboxSaveLogWithoutResetRust(
         return -1;
     }
     BlackboxSaveBasicErrorInfoRust(file_path, info)
+}
+
+/// # Safety
+/// Caller must provide a valid pointer to `ErrorInfo`.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxSaveLogWithResetRust(info: *const ErrorInfo) {
+    if info.is_null() {
+        return;
+    }
+    if BlackboxInvokeModuleOpsForInfo(info) != 0 {
+        return;
+    }
+    let _ = BlackboxSysRebootAndLog();
 }
 
 /// # Safety
