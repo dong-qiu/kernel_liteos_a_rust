@@ -191,3 +191,9 @@ CI出现问题，请分析原因
 
 改动:
 - 修复 `kernel/rust` 子模块中的 `#![no_std]` 误用（仅 crate root 允许）
+
+Prompt:
+A
+
+改动:
+- 为 `kernel_rust` 的 unsafe API 补充 `# Safety` 文档以通过 clippy

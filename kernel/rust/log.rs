@@ -10,6 +10,8 @@ pub fn printk(msg: &[u8]) {
     }
 }
 
+/// # Safety
+/// Caller must ensure `msg` is a valid, null-terminated C string pointer.
 pub unsafe fn printk_cstr(msg: *const c_char) {
     if !msg.is_null() {
         KernelPrintk(msg);
