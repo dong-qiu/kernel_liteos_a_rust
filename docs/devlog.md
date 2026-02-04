@@ -210,3 +210,11 @@ Prompt:
 改动:
 - 新增 FFI 迁移模板文档 `docs/ffi_template.md`
 - README 补充模板文档链接
+
+Prompt:
+1
+
+改动:
+- 迁移 trace 控制指令解析到 Rust（command validation/handle）
+- trace Makefile 支持 `TRACE_USE_RUST`
+- CI 增加 trace Rust build/clippy

@@ -180,6 +180,20 @@ STATIC VOID OsTraceHookInstall(VOID)
 }
 
 #ifdef LOSCFG_TRACE_CONTROL_AGENT
+#ifdef TRACE_USE_RUST
+extern BOOL OsTraceCmdIsValidRust(const TraceClientCmd *msg);
+extern VOID OsTraceCmdHandleRust(const TraceClientCmd *msg);
+
+STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
+{
+    return OsTraceCmdIsValidRust(msg);
+}
+
+STATIC VOID OsTraceCmdHandle(const TraceClientCmd *msg)
+{
+    OsTraceCmdHandleRust(msg);
+}
+#else
 STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
 {
     return ((msg->end == TRACE_CMD_END_CHAR) && (msg->cmd < TRACE_CMD_MAX_CODE));
@@ -209,6 +223,7 @@ STATIC VOID OsTraceCmdHandle(const TraceClientCmd *msg)
             break;
     }
 }
+#endif
 
 VOID TraceAgent(VOID)
 {

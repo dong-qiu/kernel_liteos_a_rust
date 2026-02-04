@@ -58,5 +58,22 @@ endif
 
 LOCAL_FLAGS := $(LOCAL_INCLUDE)
 
+TRACE_USE_RUST ?= n
+RUSTC ?= rustc
+RUSTFLAGS ?= -C panic=abort -C opt-level=2 -C relocation-model=static
+RUST_TARGET ?= $(if $(LOSCFG_LLVM_TARGET),$(LOSCFG_LLVM_TARGET:"%"=%),$(LITEOSTOPDIR)/targets/armv7a-none-eabi.json)
+
+TRACE_RUST_SRC := $(LITEOSTOPDIR)/kernel/extended/trace/rust/lib.rs
+TRACE_RUST_OBJ := $(OUT)/obj/kernel/extended/trace/rust/trace_rust.o
+
+ifeq ($(TRACE_USE_RUST),y)
+LOCAL_CFLAGS += -DTRACE_USE_RUST
+LOCAL_EXTRA_OBJS += $(TRACE_RUST_OBJ)
+endif
+
 include $(MODULE)
 
+ifeq ($(TRACE_USE_RUST),y)
+$(TRACE_RUST_OBJ): $(TRACE_RUST_SRC)
+	$(HIDE)$(RUSTC) --crate-type=lib --emit=obj -o $@ $(RUSTFLAGS) --target $(RUST_TARGET) $<
+endif
