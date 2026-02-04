@@ -264,3 +264,9 @@ CI没有通过，请分析原因
 
 改动:
 - 修复 trace Rust API 的 `private_interfaces` 报错（改用 `*const c_void` 接口）
+
+Prompt:
+CI没有通过，请分析原因
+
+改动:
+- 修复 blackbox Rust 创建目录接口的 `not_unsafe_ptr_arg_deref`（标记 unsafe 并补安全文档）

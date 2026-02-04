@@ -58,16 +58,18 @@ pub extern "C" fn BlackboxIsLogPartReadyRust(current_ready: i32) -> i32 {
     }
 }
 
+/// # Safety
+/// Caller must provide a valid, null-terminated C string pointer.
 #[no_mangle]
-pub extern "C" fn BlackboxCreateNewDirRust(dir_path: *const c_char) -> i32 {
+pub unsafe extern "C" fn BlackboxCreateNewDirRust(dir_path: *const c_char) -> i32 {
     if dir_path.is_null() {
         return -1;
     }
-    let exists = unsafe { BlackboxAccess(dir_path) };
+    let exists = BlackboxAccess(dir_path);
     if exists == 0 {
         return 0;
     }
-    let ret = unsafe { BlackboxMkdir(dir_path) };
+    let ret = BlackboxMkdir(dir_path);
     if ret != 0 {
         return -1;
     }
