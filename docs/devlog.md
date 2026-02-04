@@ -312,3 +312,9 @@ CI运行出现错误，请分析原因并修复
 
 改动:
 - 修复 blackbox Rust clippy 报错（unnecessary cast）
+
+Prompt:
+请继续迁移工作，请看看接下来做什么
+
+改动:
+- 迁移 cpup shell 命令到 Rust（新增 Rust crate 与 C FFI）

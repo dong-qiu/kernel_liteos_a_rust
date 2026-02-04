@@ -33,4 +33,22 @@ MODULE_NAME := $(notdir $(shell pwd))
 
 LOCAL_SRCS := $(wildcard *.c)
 
+CPUP_USE_RUST ?= $(LOSCFG_CPUP_USE_RUST)
+RUSTC ?= rustc
+RUSTFLAGS ?= -C panic=abort -C opt-level=2 -C relocation-model=static
+RUST_TARGET ?= $(if $(LOSCFG_LLVM_TARGET),$(LOSCFG_LLVM_TARGET:"%"=%),$(LITEOSTOPDIR)/targets/armv7a-none-eabi.json)
+
+CPUP_RUST_SRC := $(LITEOSTOPDIR)/kernel/extended/cpup/rust/lib.rs
+CPUP_RUST_OBJ := $(OUT)/obj/kernel/extended/cpup/rust/cpup_rust.o
+
+ifeq ($(CPUP_USE_RUST),y)
+LOCAL_CFLAGS += -DCPUP_USE_RUST
+LOCAL_EXTRA_OBJS += $(CPUP_RUST_OBJ)
+endif
+
 include $(MODULE)
+
+ifeq ($(CPUP_USE_RUST),y)
+$(CPUP_RUST_OBJ): $(CPUP_RUST_SRC)
+	$(HIDE)$(RUSTC) --crate-type=lib --emit=obj -o $@ $(RUSTFLAGS) --target $(RUST_TARGET) $<
+endif

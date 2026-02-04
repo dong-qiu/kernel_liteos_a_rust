@@ -33,6 +33,7 @@ jobs:
         run: |
           rustfmt --version
           rustfmt --check kernel/extended/hidumper/rust/lib.rs
+          rustfmt --check kernel/extended/cpup/rust/lib.rs
 
       - name: Rust smoke compile (hidumper)
         env:
@@ -59,6 +60,11 @@ jobs:
             --target targets/armv7a-none-eabi.json \
             -Z build-std=core,compiler_builtins \
             -Z build-std-features=compiler-builtins-mem
+          cargo build \
+            --manifest-path kernel/extended/cpup/rust/Cargo.toml \
+            --target targets/armv7a-none-eabi.json \
+            -Z build-std=core,compiler_builtins \
+            -Z build-std-features=compiler-builtins-mem
 
       - name: Clippy (hidumper)
         run: |
@@ -82,6 +88,12 @@ jobs:
             -- -D warnings
           cargo clippy \
             --manifest-path kernel/extended/blackbox/rust/Cargo.toml \
+            --target targets/armv7a-none-eabi.json \
+            -Z build-std=core,compiler_builtins \
+            -Z build-std-features=compiler-builtins-mem \
+            -- -D warnings
+          cargo clippy \
+            --manifest-path kernel/extended/cpup/rust/Cargo.toml \
             --target targets/armv7a-none-eabi.json \
             -Z build-std=core,compiler_builtins \
             -Z build-std-features=compiler-builtins-mem \

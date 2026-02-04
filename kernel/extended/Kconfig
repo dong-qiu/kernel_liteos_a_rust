@@ -27,6 +27,13 @@ config CPUP_INCLUDE_IRQ
     help
       If you wish to include irq usage for cpup.
 
+config CPUP_USE_RUST
+    bool "Use Rust for cpup shell command"
+    default n
+    depends on KERNEL_CPUP
+    help
+      Answer Y to enable Rust implementation for cpup shell command.
+
 config KERNEL_DYNLOAD
     bool "Enable Dynamic Load Feature"
     default y

@@ -82,6 +82,10 @@ LITE_OS_SEC_TEXT STATIC VOID OsCpupCmdHelp(VOID)
 
 LITE_OS_SEC_TEXT_MINOR UINT32 OsShellCmdCpup(INT32 argc, const CHAR **argv)
 {
+#ifdef CPUP_USE_RUST
+    extern UINT32 OsShellCmdCpupRust(INT32 argc, const CHAR **argv);
+    return OsShellCmdCpupRust(argc, argv);
+#else
     size_t mode, pid;
     CHAR *bufMode = NULL;
     CHAR *bufID = NULL;
@@ -133,6 +137,7 @@ LITE_OS_SEC_TEXT_MINOR UINT32 OsShellCmdCpup(INT32 argc, const CHAR **argv)
 
     OsCpupCmdHelp();
     return LOS_OK;
+#endif
 }
 
 SHELLCMD_ENTRY(cpup_shellcmd, CMD_TYPE_EX, "cpup", XARGS, (CmdCallBackFunc)OsShellCmdCpup);
