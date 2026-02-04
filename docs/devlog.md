@@ -180,6 +180,13 @@ Prompt:
 - hidumper Rust 使用 `kernel_rust::log::printk_cstr` 打印 C 字符串
 
 Prompt:
+1
+
+改动:
+- `kernel_rust` 增加通用内存分配封装
+- `kernel/common/los_rust.c` 增加 `KernelMemAlloc/KernelMemFree`
+
+Prompt:
 CI出现问题，请分析原因
 
 改动:

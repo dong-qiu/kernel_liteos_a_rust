@@ -28,6 +28,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "los_memory.h"
 #include "los_printf.h"
 
 void KernelPrintk(const char *msg)
@@ -36,4 +37,19 @@ void KernelPrintk(const char *msg)
         return;
     }
     PRINTK("%s", msg);
+}
+
+void *KernelMemAlloc(unsigned int size)
+{
+    if (size == 0) {
+        return NULL;
+    }
+    return LOS_MemAlloc(m_aucSysMem1, size);
+}
+
+void KernelMemFree(void *ptr)
+{
+    if (ptr != NULL) {
+        (void)LOS_MemFree(m_aucSysMem1, ptr);
+    }
 }
