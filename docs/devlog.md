@@ -203,3 +203,10 @@ Prompt:
 
 改动:
 - `kernel_rust` 增加 Errno/Result 类型与基础转换函数
+
+Prompt:
+1
+
+改动:
+- 新增 FFI 迁移模板文档 `docs/ffi_template.md`
+- README 补充模板文档链接

@@ -53,6 +53,8 @@ RUSTFLAGS=-C panic=abort -C opt-level=2 -C relocation-model=static
 3. Keep the C API stable and swap the adapter implementation.
 4. Add a minimal CI check (at least `rustc --emit=obj`).
 
+See `docs/ffi_template.md` for a concrete template.
+
 -   [Introduction](#section11660541593)
 -   [Directory Structure](#section161941989596)
 -   [Constraints](#section119744591305)
