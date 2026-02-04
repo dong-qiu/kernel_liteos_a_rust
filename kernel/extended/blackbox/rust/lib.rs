@@ -354,10 +354,10 @@ pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
                     module: [0; 32],
                     error_desc: [0; 512],
                 };
-                if unsafe { get_info(&mut info as *mut ErrorInfo) } == 0 {
-                    if unsafe { save_log(log_dir, &mut info as *mut ErrorInfo) } == 0 {
-                        let _ = unsafe { UploadEventByFile(kernel_fault_path) };
-                    }
+                if unsafe { get_info(&mut info as *mut ErrorInfo) } == 0
+                    && unsafe { save_log(log_dir, &mut info as *mut ErrorInfo) } == 0
+                {
+                    let _ = unsafe { UploadEventByFile(kernel_fault_path) };
                 }
             }
         }
