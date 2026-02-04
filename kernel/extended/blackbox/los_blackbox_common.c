@@ -213,6 +213,14 @@ int CreateNewDir(const char *dirPath)
 
 int CreateLogDir(const char *dirPath)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxCreateLogDirRust(const char *dirPath);
+    int ret = BlackboxCreateLogDirRust(dirPath);
+    if (ret != 0) {
+        BBOX_PRINT_ERR("Create log dir [%s] failed!\n", dirPath);
+    }
+    return ret;
+#else
     const char *temp = dirPath;
     char curPath[PATH_MAX_LEN];
     int idx = 0;
@@ -243,6 +251,7 @@ int CreateLogDir(const char *dirPath)
     }
 
     return CreateNewDir(curPath);
+#endif
 }
 #else
 int CreateLogDir(const char *dirPath)

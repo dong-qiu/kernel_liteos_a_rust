@@ -75,3 +75,53 @@ pub unsafe extern "C" fn BlackboxCreateNewDirRust(dir_path: *const c_char) -> i3
     }
     0
 }
+
+/// # Safety
+/// Caller must provide a valid, null-terminated C string pointer.
+#[no_mangle]
+pub unsafe extern "C" fn BlackboxCreateLogDirRust(dir_path: *const c_char) -> i32 {
+    if dir_path.is_null() {
+        return -1;
+    }
+
+    let mut idx: usize = 0;
+    let mut cur = [0u8; 256];
+    let mut p = dir_path;
+
+    unsafe {
+        if *p != b'/' as c_char {
+            return -1;
+        }
+
+        cur[idx] = b'/';
+        idx += 1;
+        p = p.add(1);
+
+        while idx < cur.len() {
+            let ch = *p;
+            if ch == 0 {
+                break;
+            }
+            if ch == b'/' as c_char {
+                cur[idx] = 0;
+                if BlackboxCreateNewDirRust(cur.as_ptr() as *const c_char) != 0 {
+                    return -1;
+                }
+            }
+            cur[idx] = ch as u8;
+            idx += 1;
+            p = p.add(1);
+        }
+    }
+
+    if idx >= cur.len() {
+        return -1;
+    }
+
+    cur[idx] = 0;
+    if BlackboxCreateNewDirRust(cur.as_ptr() as *const c_char) != 0 {
+        return -1;
+    }
+
+    0
+}

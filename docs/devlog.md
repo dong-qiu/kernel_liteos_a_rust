@@ -270,3 +270,9 @@ CI没有通过，请分析原因
 
 改动:
 - 修复 blackbox Rust 创建目录接口的 `not_unsafe_ptr_arg_deref`（标记 unsafe 并补安全文档）
+
+Prompt:
+1
+
+改动:
+- 迁移 blackbox `CreateLogDir` 到 Rust
