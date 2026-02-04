@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::ffi::{c_char, c_int};
+use core::ffi::{c_char, c_int, c_void};
 use core::panic::PanicInfo;
 use core::ptr;
 use kernel_rust::log::{printk, printk_cstr};
@@ -24,6 +24,22 @@ extern "C" {
     fn HidumperOpenReadOnly(path: *const c_char) -> c_int;
     fn HidumperClose(fd: c_int) -> c_int;
     fn HidumperRead(fd: c_int, buf: *mut c_char, len: u32) -> c_int;
+    fn HidumperCmdDumpAll() -> u32;
+    fn HidumperCmdCpuUsage() -> u32;
+    fn HidumperCmdMemUsage() -> u32;
+    fn HidumperCmdTaskInfo() -> u32;
+    fn HidumperCmdInjectKernelCrash() -> u32;
+    fn HidumperCmdDumpFaultLog() -> u32;
+    fn HidumperCmdMemData() -> u32;
+    fn HidumperGetEperm() -> c_int;
+    fn HidumperLogInvalidCmd(cmd: u32);
+    fn HidumperInvokeDumpSysInfo();
+    fn HidumperInvokeDumpCpuUsage();
+    fn HidumperInvokeDumpMemUsage();
+    fn HidumperInvokeDumpTaskInfo();
+    fn HidumperInvokeDumpFaultLog();
+    fn HidumperInvokeDumpMemData(param: *mut c_void);
+    fn HidumperInvokeInjectKernelCrash();
 }
 
 #[repr(C)]
@@ -203,6 +219,47 @@ unsafe fn dump_file(path: *const c_char, header: &[u8]) {
 pub extern "C" fn HiDumperInjectKernelCrashRust() {
     if unsafe { HidumperInjectKernelCrash() } != 0 {
         printk(UNSUPPORTED);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn HiDumperIoctlRust(cmd: c_int, arg: usize) -> c_int {
+    let cmd_u = cmd as u32;
+    unsafe {
+        if cmd_u == HidumperCmdDumpAll() {
+            HidumperInvokeDumpSysInfo();
+            HidumperInvokeDumpCpuUsage();
+            HidumperInvokeDumpMemUsage();
+            HidumperInvokeDumpTaskInfo();
+            return 0;
+        }
+        if cmd_u == HidumperCmdCpuUsage() {
+            HidumperInvokeDumpCpuUsage();
+            return 0;
+        }
+        if cmd_u == HidumperCmdMemUsage() {
+            HidumperInvokeDumpMemUsage();
+            return 0;
+        }
+        if cmd_u == HidumperCmdTaskInfo() {
+            HidumperInvokeDumpTaskInfo();
+            return 0;
+        }
+        if cmd_u == HidumperCmdInjectKernelCrash() {
+            HidumperInvokeInjectKernelCrash();
+            return 0;
+        }
+        if cmd_u == HidumperCmdDumpFaultLog() {
+            HidumperInvokeDumpFaultLog();
+            return 0;
+        }
+        if cmd_u == HidumperCmdMemData() {
+            HidumperInvokeDumpMemData(arg as *mut c_void);
+            return 0;
+        }
+
+        HidumperLogInvalidCmd(cmd_u);
+        HidumperGetEperm()
     }
 }
 

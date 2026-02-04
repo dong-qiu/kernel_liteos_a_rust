@@ -94,6 +94,7 @@ extern VOID HiDumperDumpTaskInfoRust(VOID);
 extern VOID HiDumperDumpFaultLogRust(VOID);
 extern VOID HiDumperDumpMemDataRust(struct MemDumpParam *param);
 extern VOID HiDumperInjectKernelCrashRust(VOID);
+extern INT32 HiDumperIoctlRust(INT32 cmd, unsigned long arg);
 #endif
 
 /* ------------ local prototypes ------------ */
@@ -125,6 +126,114 @@ STATIC struct file_operations_vfs g_hidumperDevOps = {
 #endif
     NULL,          /* unlink */
 };
+
+#ifdef HIDUMPER_USE_RUST
+UINT32 HidumperCmdDumpAll(VOID)
+{
+    return (UINT32)HIDUMPER_DUMP_ALL;
+}
+
+UINT32 HidumperCmdCpuUsage(VOID)
+{
+    return (UINT32)HIDUMPER_CPU_USAGE;
+}
+
+UINT32 HidumperCmdMemUsage(VOID)
+{
+    return (UINT32)HIDUMPER_MEM_USAGE;
+}
+
+UINT32 HidumperCmdTaskInfo(VOID)
+{
+    return (UINT32)HIDUMPER_TASK_INFO;
+}
+
+UINT32 HidumperCmdInjectKernelCrash(VOID)
+{
+    return (UINT32)HIDUMPER_INJECT_KERNEL_CRASH;
+}
+
+UINT32 HidumperCmdDumpFaultLog(VOID)
+{
+    return (UINT32)HIDUMPER_DUMP_FAULT_LOG;
+}
+
+UINT32 HidumperCmdMemData(VOID)
+{
+    return (UINT32)HIDUMPER_MEM_DATA;
+}
+
+INT32 HidumperGetEperm(VOID)
+{
+    return EPERM;
+}
+
+VOID HidumperLogInvalidCmd(UINT32 cmd)
+{
+    PRINTK("Invalid CMD: 0x%x\n", cmd);
+}
+
+VOID HidumperInvokeDumpSysInfo(VOID)
+{
+    if (g_adapter.DumpSysInfo != NULL) {
+        g_adapter.DumpSysInfo();
+    } else {
+        PRINT_ERR("g_adapter->DumpSysInfo is NULL!\n");
+    }
+}
+
+VOID HidumperInvokeDumpCpuUsage(VOID)
+{
+    if (g_adapter.DumpCpuUsage != NULL) {
+        g_adapter.DumpCpuUsage();
+    } else {
+        PRINT_ERR("g_adapter->DumpCpuUsage is NULL!\n");
+    }
+}
+
+VOID HidumperInvokeDumpMemUsage(VOID)
+{
+    if (g_adapter.DumpMemUsage != NULL) {
+        g_adapter.DumpMemUsage();
+    } else {
+        PRINT_ERR("g_adapter->DumpMemUsage is NULL!\n");
+    }
+}
+
+VOID HidumperInvokeDumpTaskInfo(VOID)
+{
+    if (g_adapter.DumpTaskInfo != NULL) {
+        g_adapter.DumpTaskInfo();
+    } else {
+        PRINT_ERR("g_adapter->DumpTaskInfo is NULL!\n");
+    }
+}
+
+VOID HidumperInvokeDumpFaultLog(VOID)
+{
+    if (g_adapter.DumpFaultLog != NULL) {
+        g_adapter.DumpFaultLog();
+    } else {
+        PRINT_ERR("g_adapter->DumpFaultLog is NULL!\n");
+    }
+}
+
+VOID HidumperInvokeDumpMemData(VOID *param)
+{
+    if (g_adapter.DumpMemData != NULL) {
+        g_adapter.DumpMemData((struct MemDumpParam *)param);
+    }
+}
+
+VOID HidumperInvokeInjectKernelCrash(VOID)
+{
+    if (g_adapter.InjectKernelCrash != NULL) {
+        g_adapter.InjectKernelCrash();
+    } else {
+        PRINT_ERR("g_adapter->InjectKernelCrash is NULL!\n");
+    }
+}
+#endif
 
 /* ------------ function definitions ------------ */
 STATIC INT32 HiDumperOpen(struct file *filep)
@@ -302,6 +411,10 @@ static void InjectKernelCrash(void)
 
 static INT32 HiDumperIoctl(struct file *filep, INT32 cmd, unsigned long arg)
 {
+#ifdef HIDUMPER_USE_RUST
+    (VOID)filep;
+    return HiDumperIoctlRust(cmd, arg);
+#else
     INT32 ret = 0;
 
     switch (cmd) {
@@ -338,6 +451,7 @@ static INT32 HiDumperIoctl(struct file *filep, INT32 cmd, unsigned long arg)
     }
 
     return ret;
+#endif
 }
 
 static void RegisterCommonAdapter(void)

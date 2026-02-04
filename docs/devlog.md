@@ -380,3 +380,9 @@ Prompt:
 
 改动:
 - 迁移 trace 核心控制逻辑到 Rust（LOS_TraceStart/Stop/EventMaskSet/RecordDump）并新增 C 侧状态/锁包装接口
+
+Prompt:
+请依次完成1和2. 每个任务完成后要先通过本地测试，本地测试通过后提交并推送远程，推送后要检查CI的结果，如果CI不通过，则需要分析原因并修复
+
+改动:
+- 迁移 hidumper ioctl 命令分发到 Rust（保持 g_adapter 调用与错误处理一致）
