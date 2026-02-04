@@ -136,6 +136,76 @@ UINT32 TraceGetErrnoTraceErrorStatusRust(VOID)
 {
     return LOS_ERRNO_TRACE_ERROR_STATUS;
 }
+
+UINT32 TracePipelineInitRust(VOID)
+{
+#ifdef LOSCFG_TRACE_CLIENT_INTERACT
+    return OsTracePipelineInit();
+#else
+    return LOS_OK;
+#endif
+}
+
+UINT32 TraceCreateAgentTaskRust(VOID)
+{
+#ifdef LOSCFG_TRACE_CONTROL_AGENT
+    return OsCreateTraceAgentTask();
+#else
+    return LOS_OK;
+#endif
+}
+
+VOID TraceDeleteAgentTaskRust(VOID)
+{
+#ifdef LOSCFG_TRACE_CONTROL_AGENT
+    (VOID)LOS_TaskDelete(g_traceTaskId);
+#endif
+}
+
+UINT32 TraceBufInitRust(VOID)
+{
+#ifdef LOSCFG_RECORDER_MODE_OFFLINE
+    return OsTraceBufInit(LOSCFG_TRACE_BUFFER_SIZE);
+#else
+    return LOS_OK;
+#endif
+}
+
+VOID TraceHookInstallRust(VOID)
+{
+    OsTraceHookInstall();
+}
+
+VOID TraceCnvInitRust(VOID)
+{
+    OsTraceCnvInit();
+}
+
+VOID TraceResetEventCountRust(VOID)
+{
+    g_traceEventCount = 0;
+}
+
+VOID TraceSetInitialStateRust(VOID)
+{
+#ifdef LOSCFG_RECORDER_MODE_ONLINE
+    g_enableTrace = FALSE;
+    g_traceState = TRACE_INITED;
+#else
+    g_enableTrace = TRUE;
+    g_traceState = TRACE_STARTED;
+#endif
+}
+
+VOID TraceLogInitAlreadyRust(UINT32 state)
+{
+    TRACE_ERROR("trace has been initialized already, the current state is :%d\n", state);
+}
+
+VOID TraceLogCreateAgentFailRust(UINT32 ret)
+{
+    TRACE_ERROR("trace init create agentTask error :0x%x\n", ret);
+}
 #endif
 
 STATIC_INLINE BOOL OsTraceHwiFilter(UINT32 hwiNum)
@@ -335,6 +405,10 @@ STATIC UINT32 OsCreateTraceAgentTask(VOID)
 
 STATIC UINT32 OsTraceInit(VOID)
 {
+#ifdef TRACE_USE_RUST
+    extern UINT32 OsTraceInitRust(VOID);
+    return OsTraceInitRust();
+#else
     UINT32 ret;
 
     if (g_traceState != TRACE_UNINIT) {
@@ -383,6 +457,7 @@ STATIC UINT32 OsTraceInit(VOID)
     return LOS_OK;
 LOS_ERREND:
     return ret;
+#endif
 }
 
 UINT32 LOS_TraceStart(VOID)

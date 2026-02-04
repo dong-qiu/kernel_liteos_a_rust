@@ -49,6 +49,16 @@ extern "C" {
     fn TraceLogNotInitedRust();
     fn TraceLogDumpStateRust(state: u32);
     fn TraceGetErrnoTraceErrorStatusRust() -> u32;
+    fn TracePipelineInitRust() -> u32;
+    fn TraceCreateAgentTaskRust() -> u32;
+    fn TraceDeleteAgentTaskRust();
+    fn TraceBufInitRust() -> u32;
+    fn TraceHookInstallRust();
+    fn TraceCnvInitRust();
+    fn TraceResetEventCountRust();
+    fn TraceSetInitialStateRust();
+    fn TraceLogInitAlreadyRust(state: u32);
+    fn TraceLogCreateAgentFailRust(ret: u32);
 }
 
 #[no_mangle]
@@ -180,4 +190,39 @@ pub extern "C" fn LOS_TraceRecordDumpRust(to_client: Bool) {
         return;
     }
     unsafe { TraceRecordDumpRust(to_client) };
+}
+
+#[no_mangle]
+pub extern "C" fn OsTraceInitRust() -> u32 {
+    let state = unsafe { TraceGetStateRust() };
+    if state != TRACE_UNINIT {
+        unsafe { TraceLogInitAlreadyRust(state) };
+        return unsafe { TraceGetErrnoTraceErrorStatusRust() };
+    }
+
+    let mut ret = unsafe { TracePipelineInitRust() };
+    if ret != LOS_OK {
+        return ret;
+    }
+
+    ret = unsafe { TraceCreateAgentTaskRust() };
+    if ret != LOS_OK {
+        unsafe { TraceLogCreateAgentFailRust(ret) };
+        return ret;
+    }
+
+    ret = unsafe { TraceBufInitRust() };
+    if ret != LOS_OK {
+        unsafe { TraceDeleteAgentTaskRust() };
+        return ret;
+    }
+
+    unsafe {
+        TraceHookInstallRust();
+        TraceCnvInitRust();
+        TraceResetEventCountRust();
+        TraceSetInitialStateRust();
+    }
+
+    LOS_OK
 }

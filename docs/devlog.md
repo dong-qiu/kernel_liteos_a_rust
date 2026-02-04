@@ -386,3 +386,9 @@ Prompt:
 
 改动:
 - 迁移 hidumper ioctl 命令分发到 Rust（保持 g_adapter 调用与错误处理一致）
+
+Prompt:
+请按照1,3,2,4,5,6的顺序执行
+
+改动:
+- 迁移 trace 初始化流程到 Rust（OsTraceInit 迁移与 C 侧包装）
