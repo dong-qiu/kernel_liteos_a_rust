@@ -183,6 +183,7 @@ STATIC VOID OsTraceHookInstall(VOID)
 #ifdef TRACE_USE_RUST
 extern BOOL OsTraceCmdIsValidRust(const VOID *msg);
 extern VOID OsTraceCmdHandleRust(const VOID *msg);
+extern VOID TraceAgentRust(VOID);
 
 STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
 {
@@ -192,6 +193,11 @@ STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
 STATIC VOID OsTraceCmdHandle(const TraceClientCmd *msg)
 {
     OsTraceCmdHandleRust((const VOID *)msg);
+}
+
+VOID TraceAgent(VOID)
+{
+    TraceAgentRust();
 }
 #else
 STATIC BOOL OsTraceCmdIsValid(const TraceClientCmd *msg)
@@ -223,8 +229,6 @@ STATIC VOID OsTraceCmdHandle(const TraceClientCmd *msg)
             break;
     }
 }
-#endif
-
 VOID TraceAgent(VOID)
 {
     UINT32 ret;
@@ -239,6 +243,8 @@ VOID TraceAgent(VOID)
         }
     }
 }
+#endif
+#endif
 
 STATIC UINT32 OsCreateTraceAgentTask(VOID)
 {

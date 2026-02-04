@@ -21,12 +21,15 @@ const TRACE_CMD_STOP: u8 = 2;
 const TRACE_CMD_SET_EVENT_MASK: u8 = 3;
 const TRACE_CMD_RECODE_DUMP: u8 = 4;
 const TRACE_CMD_MAX_CODE: u8 = 5;
+const LOS_OK: u32 = 0;
 
 extern "C" {
     fn LOS_TraceStart() -> u32;
     fn LOS_TraceStop();
     fn LOS_TraceEventMaskSet(mask: u32);
     fn LOS_TraceRecordDump(to_client: Bool);
+    fn OsTraceDataWait() -> u32;
+    fn OsTraceDataRecv(data: *mut u8, size: u32, timeout: u32) -> u32;
 }
 
 #[no_mangle]
@@ -74,5 +77,31 @@ pub extern "C" fn OsTraceCmdHandleRust(msg: *const c_void) {
             unsafe { LOS_TraceRecordDump(1) };
         }
         _ => {}
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn TraceAgentRust() {
+    loop {
+        let mut msg = TraceClientCmd {
+            cmd: 0,
+            param1: 0,
+            param2: 0,
+            param3: 0,
+            param4: 0,
+            param5: 0,
+            end: 0,
+        };
+        let ret = unsafe { OsTraceDataWait() };
+        if ret == LOS_OK {
+            unsafe {
+                let _ = OsTraceDataRecv(
+                    &mut msg as *mut TraceClientCmd as *mut u8,
+                    core::mem::size_of::<TraceClientCmd>() as u32,
+                    0,
+                );
+            }
+            OsTraceCmdHandleRust(&msg as *const TraceClientCmd as *const c_void);
+        }
     }
 }

@@ -52,6 +52,12 @@ int FullWriteFile(const char *filePath, const char *buf, size_t bufSize, int isA
 int SaveBasicErrorInfo(const char *filePath, const struct ErrorInfo *info);
 int CreateLogDir(const char *dirPath);
 bool IsLogPartReady(void);
+void BlackboxLogErrSimple(const char *msg);
+void BlackboxLogInfoSimple(const char *msg);
+void BlackboxLogErrModule(const char *module, const char *msg);
+void BlackboxLogInfoModule(const char *module, const char *msg);
+void BlackboxLogInfoModuleEvent(const char *module, const char *event, const char *msg);
+void BlackboxLogErrPathFailed(const char *prefix, const char *path);
 
 #ifdef __cplusplus
 #if __cplusplus

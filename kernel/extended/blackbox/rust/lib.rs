@@ -19,6 +19,11 @@ extern "C" {
     fn BlackboxOpsListSemPost() -> u32;
     fn CreateLogDir(dir_path: *const c_char) -> i32;
     fn UploadEventByFile(file_path: *const c_char) -> i32;
+    fn BlackboxLogErrSimple(msg: *const c_char);
+    fn BlackboxLogErrModule(module: *const c_char, msg: *const c_char);
+    fn BlackboxLogInfoModule(module: *const c_char, msg: *const c_char);
+    fn BlackboxLogInfoModuleEvent(module: *const c_char, event: *const c_char, msg: *const c_char);
+    fn BlackboxLogErrPathFailed(prefix: *const c_char, path: *const c_char);
 }
 
 const LOG_FLAG: &[u8; 7] = b"GOODLOG";
@@ -27,6 +32,16 @@ const ERROR_INFO_EVENT: &[u8] = b"event: ";
 const ERROR_INFO_MODULE: &[u8] = b"\nmodule: ";
 const ERROR_INFO_DESC: &[u8] = b"\nerrorDesc: ";
 const ERROR_INFO_TAIL: &[u8] = b"\n";
+const LOG_ERR_SEM_PEND: &[u8] = b"Request g_opsListSem failed!\n\0";
+const LOG_ERR_OPS_LIST_NULL: &[u8] = b"ops list is NULL!\n\0";
+const LOG_ERR_OPS_MISSING: &[u8] = b"GetLastLogInfo or SaveLastLog is NULL!\n\0";
+const LOG_ERR_GET_INFO: &[u8] = b"failed to get log info!\n\0";
+const LOG_ERR_SAVE_LOG: &[u8] = b"failed to save log!\n\0";
+const LOG_INFO_START_SAVE: &[u8] = b"starts saving log!\n\0";
+const LOG_INFO_END_SAVE: &[u8] = b"ends saving log!\n\0";
+const LOG_INFO_START_UPLOAD: &[u8] = b"starts uploading event\0";
+const LOG_INFO_END_UPLOAD: &[u8] = b"ends uploading event\0";
+const LOG_ERR_CREATE_LOG_DIR: &[u8] = b"Create log dir\0";
 
 #[repr(C)]
 pub struct ErrorInfo {
@@ -63,27 +78,49 @@ struct BBoxOps {
     ops: ModuleOps,
 }
 
+fn log_err_simple(msg: &[u8]) {
+    unsafe { BlackboxLogErrSimple(msg.as_ptr() as *const c_char) };
+}
+
+fn log_err_module(module: *const c_char, msg: &[u8]) {
+    unsafe { BlackboxLogErrModule(module, msg.as_ptr() as *const c_char) };
+}
+
+fn log_info_module(module: *const c_char, msg: &[u8]) {
+    unsafe { BlackboxLogInfoModule(module, msg.as_ptr() as *const c_char) };
+}
+
+fn log_info_module_event(module: *const c_char, event: *const c_char, msg: &[u8]) {
+    unsafe { BlackboxLogInfoModuleEvent(module, event, msg.as_ptr() as *const c_char) };
+}
+
+fn log_err_path_failed(prefix: &[u8], path: *const c_char) {
+    unsafe { BlackboxLogErrPathFailed(prefix.as_ptr() as *const c_char, path) };
+}
+
 #[no_mangle]
 pub extern "C" fn BlackboxGetLastLogInfoRust(log_buf: *const c_void, info: *mut c_void) -> i32 {
     if log_buf.is_null() || info.is_null() {
         return -1;
     }
 
-    let log = log_buf as *const FaultLogInfo;
-    let flag = unsafe { &(*log).flag };
-    let mut i = 0usize;
-    while i < LOG_FLAG.len() {
+    let log_bytes = log_buf as *const u8;
+    let mut flag = [0u8; 8];
+    unsafe {
+        core::ptr::copy_nonoverlapping(log_bytes, flag.as_mut_ptr(), flag.len());
+    }
+    for i in 0..LOG_FLAG.len() {
         if flag[i] != LOG_FLAG[i] {
             return -1;
         }
-        i += 1;
     }
 
+    let info_offset = core::mem::size_of::<[u8; 8]>() + core::mem::size_of::<i32>();
     unsafe {
         core::ptr::copy_nonoverlapping(
-            &(*log).info as *const ErrorInfo,
-            info as *mut ErrorInfo,
-            1,
+            log_bytes.add(info_offset),
+            info as *mut u8,
+            size_of::<ErrorInfo>(),
         );
     }
     0
@@ -108,7 +145,7 @@ unsafe fn copy_cstr(dst: &mut [u8], src: *const c_char) {
         if ch == 0 {
             break;
         }
-        dst[i] = ch;
+        dst[i] = ch as u8;
         i += 1;
     }
     dst[i] = 0;
@@ -164,7 +201,11 @@ pub unsafe extern "C" fn BlackboxFullWriteFileRust(
     let ok = write_all(fd, buf, buf_size);
     let _ = BlackboxFsync(fd);
     let _ = BlackboxClose(fd);
-    if ok { 0 } else { -1 }
+    if ok {
+        0
+    } else {
+        -1
+    }
 }
 
 /// # Safety
@@ -237,6 +278,7 @@ pub unsafe extern "C" fn BlackboxSaveLogWithoutResetRust(
         return -1;
     }
     if BlackboxCreateLogDirRust(log_dir) != 0 {
+        log_err_path_failed(LOG_ERR_CREATE_LOG_DIR, log_dir);
         return -1;
     }
     BlackboxSaveBasicErrorInfoRust(file_path, info)
@@ -293,8 +335,11 @@ pub unsafe extern "C" fn BlackboxSaveLastLogRust(
         return -1;
     }
 
-    let log = log_buf as *const FaultLogInfo;
-    let flag = unsafe { &(*log).flag };
+    let log_bytes = log_buf as *const u8;
+    let mut flag = [0u8; 8];
+    unsafe {
+        core::ptr::copy_nonoverlapping(log_bytes, flag.as_mut_ptr(), flag.len());
+    }
     let mut ok = true;
     for i in 0..LOG_FLAG.len() {
         if flag[i] != LOG_FLAG[i] {
@@ -304,10 +349,15 @@ pub unsafe extern "C" fn BlackboxSaveLastLogRust(
     }
 
     if ok {
-        let len = unsafe { (*log).len };
+        let len_ptr = unsafe { log_bytes.add(core::mem::size_of::<[u8; 8]>()) as *const i32 };
+        let len = unsafe { core::ptr::read_unaligned(len_ptr) };
         let payload = log_size.saturating_sub(size_of::<FaultLogInfo>());
-        let use_len = if len <= 0 { 0 } else { min(payload, len as usize) };
-        let data_ptr = unsafe { (log_buf as *const u8).add(size_of::<FaultLogInfo>()) };
+        let use_len = if len <= 0 {
+            0
+        } else {
+            min(payload, len as usize)
+        };
+        let data_ptr = unsafe { log_bytes.add(size_of::<FaultLogInfo>()) };
         let _ = BlackboxSaveFaultLogRust(file_path, data_ptr, use_len, info);
     }
 
@@ -328,6 +378,7 @@ pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
         return -1;
     }
     if BlackboxOpsListSemPend() != 0 {
+        log_err_simple(LOG_ERR_SEM_PEND);
         return -1;
     }
     if CreateLogDir(log_dir) != 0 {
@@ -337,6 +388,7 @@ pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
 
     let head = BlackboxGetOpsList();
     if head.is_null() {
+        log_err_simple(LOG_ERR_OPS_LIST_NULL);
         let _ = BlackboxOpsListSemPost();
         return -1;
     }
@@ -346,6 +398,7 @@ pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
         let ops = node as *mut BBoxOps;
         if !ops.is_null() {
             let module_ops = unsafe { &(*ops).ops };
+            let module_ptr = module_ops.module.as_ptr() as *const c_char;
             if let (Some(get_info), Some(save_log)) =
                 (module_ops.get_last_log_info, module_ops.save_last_log)
             {
@@ -354,11 +407,22 @@ pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
                     module: [0; 32],
                     error_desc: [0; 512],
                 };
-                if unsafe { get_info(&mut info as *mut ErrorInfo) } == 0
-                    && unsafe { save_log(log_dir, &mut info as *mut ErrorInfo) } == 0
-                {
-                    let _ = unsafe { UploadEventByFile(kernel_fault_path) };
+                if unsafe { get_info(&mut info as *mut ErrorInfo) } != 0 {
+                    log_err_module(module_ptr, LOG_ERR_GET_INFO);
+                } else {
+                    log_info_module(module_ptr, LOG_INFO_START_SAVE);
+                    if unsafe { save_log(log_dir, &mut info as *mut ErrorInfo) } != 0 {
+                        log_err_module(module_ptr, LOG_ERR_SAVE_LOG);
+                    } else {
+                        log_info_module(module_ptr, LOG_INFO_END_SAVE);
+                        let event_ptr = info.event.as_ptr() as *const c_char;
+                        log_info_module_event(module_ptr, event_ptr, LOG_INFO_START_UPLOAD);
+                        let _ = unsafe { UploadEventByFile(kernel_fault_path) };
+                        log_info_module_event(module_ptr, event_ptr, LOG_INFO_END_UPLOAD);
+                    }
                 }
+            } else {
+                log_err_module(module_ptr, LOG_ERR_OPS_MISSING);
             }
         }
         node = unsafe { (*node).pst_next };
@@ -418,7 +482,7 @@ pub unsafe extern "C" fn BlackboxCreateLogDirRust(dir_path: *const c_char) -> i3
                     return -1;
                 }
             }
-            cur[idx] = ch;
+            cur[idx] = ch as u8;
             idx += 1;
             p = p.add(1);
         }

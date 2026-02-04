@@ -53,6 +53,60 @@
 /* ------------ local variables ------------ */
 static bool g_isLogPartReady = FALSE;
 
+void BlackboxLogErrSimple(const char *msg)
+{
+    if (msg == NULL) {
+        BBOX_PRINT_ERR("msg is NULL!\n");
+        return;
+    }
+    BBOX_PRINT_ERR("%s", msg);
+}
+
+void BlackboxLogInfoSimple(const char *msg)
+{
+    if (msg == NULL) {
+        BBOX_PRINT_INFO("msg is NULL!\n");
+        return;
+    }
+    BBOX_PRINT_INFO("%s", msg);
+}
+
+void BlackboxLogErrModule(const char *module, const char *msg)
+{
+    if (module == NULL || msg == NULL) {
+        BBOX_PRINT_ERR("module: %p, msg: %p!\n", module, msg);
+        return;
+    }
+    BBOX_PRINT_ERR("[%s] %s", module, msg);
+}
+
+void BlackboxLogInfoModule(const char *module, const char *msg)
+{
+    if (module == NULL || msg == NULL) {
+        BBOX_PRINT_INFO("module: %p, msg: %p!\n", module, msg);
+        return;
+    }
+    BBOX_PRINT_INFO("[%s] %s", module, msg);
+}
+
+void BlackboxLogInfoModuleEvent(const char *module, const char *event, const char *msg)
+{
+    if (module == NULL || event == NULL || msg == NULL) {
+        BBOX_PRINT_INFO("module: %p, event: %p, msg: %p!\n", module, event, msg);
+        return;
+    }
+    BBOX_PRINT_INFO("[%s] %s [%s]\n", module, msg, event);
+}
+
+void BlackboxLogErrPathFailed(const char *prefix, const char *path)
+{
+    if (prefix == NULL || path == NULL) {
+        BBOX_PRINT_ERR("prefix: %p, path: %p!\n", prefix, path);
+        return;
+    }
+    BBOX_PRINT_ERR("%s [%s] failed!\n", prefix, path);
+}
+
 /* ------------ function definitions ------------ */
 int FullWriteFile(const char *filePath, const char *buf, size_t bufSize, int isAppend)
 {
