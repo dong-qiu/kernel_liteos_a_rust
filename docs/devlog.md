@@ -254,6 +254,12 @@ Prompt:
 - `kernel_rust` 增加 RAII 内存封装 `KernelBox<T>`
 
 Prompt:
+1
+
+改动:
+- 迁移 blackbox `CreateNewDir` 到 Rust（保留 C 侧 access/mkdir 包装）
+
+Prompt:
 CI没有通过，请分析原因
 
 改动:

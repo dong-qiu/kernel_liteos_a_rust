@@ -1,6 +1,11 @@
 #![no_std]
 
-use core::ffi::c_void;
+use core::ffi::{c_char, c_void};
+
+extern "C" {
+    fn BlackboxAccess(path: *const c_char) -> i32;
+    fn BlackboxMkdir(path: *const c_char) -> i32;
+}
 
 const LOG_FLAG: &[u8; 7] = b"GOODLOG";
 
@@ -51,4 +56,20 @@ pub extern "C" fn BlackboxIsLogPartReadyRust(current_ready: i32) -> i32 {
     } else {
         0
     }
+}
+
+#[no_mangle]
+pub extern "C" fn BlackboxCreateNewDirRust(dir_path: *const c_char) -> i32 {
+    if dir_path.is_null() {
+        return -1;
+    }
+    let exists = unsafe { BlackboxAccess(dir_path) };
+    if exists == 0 {
+        return 0;
+    }
+    let ret = unsafe { BlackboxMkdir(dir_path) };
+    if ret != 0 {
+        return -1;
+    }
+    0
 }

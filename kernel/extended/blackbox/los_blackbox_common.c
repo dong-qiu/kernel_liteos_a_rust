@@ -164,8 +164,32 @@ bool IsLogPartReady(void)
 #endif
 
 #ifdef LOSCFG_FS_VFS
+int BlackboxAccess(const char *path)
+{
+    if (path == NULL) {
+        return -1;
+    }
+    return access(path, 0);
+}
+
+int BlackboxMkdir(const char *path)
+{
+    if (path == NULL) {
+        return -1;
+    }
+    return mkdir(path, BBOX_DIR_MODE);
+}
+
 int CreateNewDir(const char *dirPath)
 {
+#ifdef BLACKBOX_USE_RUST
+    extern int BlackboxCreateNewDirRust(const char *dirPath);
+    int ret = BlackboxCreateNewDirRust(dirPath);
+    if (ret != 0) {
+        BBOX_PRINT_ERR("mkdir [%s] failed!\n", dirPath);
+    }
+    return ret;
+#else
     int ret;
 
     if (dirPath == NULL) {
@@ -184,6 +208,7 @@ int CreateNewDir(const char *dirPath)
     }
 
     return 0;
+#endif
 }
 
 int CreateLogDir(const char *dirPath)
