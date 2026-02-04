@@ -368,3 +368,9 @@ Prompt:
 - blackbox Rust 补充诊断日志（ops 列表处理与事件上传相关日志）
 - blackbox Rust 修正 `c_char` 到 `u8` 的拷贝类型以兼容主机编译
 - blackbox Rust 清理未使用的日志 FFI 声明
+
+Prompt:
+提交之前进行本地测试，本地测试通过后提交至并推送
+
+改动:
+- blackbox Rust 新增 `c_char` 到 `u8` 的转换辅助函数，避免 clippy unnecessary_cast

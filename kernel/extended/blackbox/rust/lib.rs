@@ -78,6 +78,12 @@ struct BBoxOps {
     ops: ModuleOps,
 }
 
+#[inline]
+#[allow(clippy::unnecessary_cast)]
+fn c_char_to_u8(ch: c_char) -> u8 {
+    ch as u8
+}
+
 fn log_err_simple(msg: &[u8]) {
     unsafe { BlackboxLogErrSimple(msg.as_ptr() as *const c_char) };
 }
@@ -145,7 +151,7 @@ unsafe fn copy_cstr(dst: &mut [u8], src: *const c_char) {
         if ch == 0 {
             break;
         }
-        dst[i] = ch as u8;
+        dst[i] = c_char_to_u8(ch);
         i += 1;
     }
     dst[i] = 0;
@@ -482,7 +488,7 @@ pub unsafe extern "C" fn BlackboxCreateLogDirRust(dir_path: *const c_char) -> i3
                     return -1;
                 }
             }
-            cur[idx] = ch as u8;
+            cur[idx] = c_char_to_u8(ch);
             idx += 1;
             p = p.add(1);
         }
