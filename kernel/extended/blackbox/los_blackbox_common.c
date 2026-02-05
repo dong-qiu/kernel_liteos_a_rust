@@ -107,6 +107,39 @@ void BlackboxLogErrPathFailed(const char *prefix, const char *path)
     BBOX_PRINT_ERR("%s [%s] failed!\n", prefix, path);
 }
 
+void BlackboxLogInvalidWriteArgs(const char *filePath, const void *buf, size_t bufSize)
+{
+    BBOX_PRINT_ERR("filePath: %p, buf: %p, bufSize: %lu!\n", filePath, buf, bufSize);
+}
+
+void BlackboxLogLogPartNotReady(void)
+{
+    BBOX_PRINT_ERR("log path [%s] isn't ready to be written!\n", LOSCFG_BLACKBOX_LOG_ROOT_PATH);
+}
+
+void BlackboxLogOpenFailed(const char *filePath, int fd)
+{
+    if (filePath == NULL) {
+        BBOX_PRINT_ERR("filePath is NULL!\n");
+        return;
+    }
+    BBOX_PRINT_ERR("Create file [%s] failed, fd: %d!\n", filePath, fd);
+}
+
+void BlackboxLogWriteFailed(const char *filePath)
+{
+    if (filePath == NULL) {
+        BBOX_PRINT_ERR("filePath is NULL!\n");
+        return;
+    }
+    BBOX_PRINT_ERR("Failed to write file [%s]!\n", filePath);
+}
+
+void BlackboxLogBufferNotEnough(void)
+{
+    BBOX_PRINT_ERR("buf is not enough or snprintf_s failed!\n");
+}
+
 /* ------------ function definitions ------------ */
 int FullWriteFile(const char *filePath, const char *buf, size_t bufSize, int isAppend)
 {

@@ -58,6 +58,11 @@ void BlackboxLogErrModule(const char *module, const char *msg);
 void BlackboxLogInfoModule(const char *module, const char *msg);
 void BlackboxLogInfoModuleEvent(const char *module, const char *event, const char *msg);
 void BlackboxLogErrPathFailed(const char *prefix, const char *path);
+void BlackboxLogInvalidWriteArgs(const char *filePath, const void *buf, size_t bufSize);
+void BlackboxLogLogPartNotReady(void);
+void BlackboxLogOpenFailed(const char *filePath, int fd);
+void BlackboxLogWriteFailed(const char *filePath);
+void BlackboxLogBufferNotEnough(void);
 
 #ifdef __cplusplus
 #if __cplusplus

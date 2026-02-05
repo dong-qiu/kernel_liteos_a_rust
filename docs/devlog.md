@@ -416,3 +416,9 @@ Prompt:
 
 改动:
 - blackbox SaveBasicErrorInfo 改为一次性写入（减少 write 次数）
+
+Prompt:
+请按照1,3,2,4,5,6的顺序执行
+
+改动:
+- blackbox Rust/C 行为一致性收敛（补齐写文件/参数/ops 相关错误日志）

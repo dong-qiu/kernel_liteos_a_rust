@@ -24,6 +24,11 @@ extern "C" {
     fn BlackboxLogInfoModule(module: *const c_char, msg: *const c_char);
     fn BlackboxLogInfoModuleEvent(module: *const c_char, event: *const c_char, msg: *const c_char);
     fn BlackboxLogErrPathFailed(prefix: *const c_char, path: *const c_char);
+    fn BlackboxLogInvalidWriteArgs(file_path: *const c_char, buf: *const c_void, buf_size: usize);
+    fn BlackboxLogLogPartNotReady();
+    fn BlackboxLogOpenFailed(file_path: *const c_char, fd: i32);
+    fn BlackboxLogWriteFailed(file_path: *const c_char);
+    fn BlackboxLogBufferNotEnough();
 }
 
 const LOG_FLAG: &[u8; 7] = b"GOODLOG";
@@ -36,6 +41,7 @@ const ERROR_INFO_MAX_LEN: usize = 768;
 const LOG_ERR_SEM_PEND: &[u8] = b"Request g_opsListSem failed!\n\0";
 const LOG_ERR_OPS_LIST_NULL: &[u8] = b"ops list is NULL!\n\0";
 const LOG_ERR_OPS_MISSING: &[u8] = b"GetLastLogInfo or SaveLastLog is NULL!\n\0";
+const LOG_ERR_OPS_NULL: &[u8] = b"ops: NULL, please check it!\n\0";
 const LOG_ERR_GET_INFO: &[u8] = b"failed to get log info!\n\0";
 const LOG_ERR_SAVE_LOG: &[u8] = b"failed to save log!\n\0";
 const LOG_INFO_START_SAVE: &[u8] = b"starts saving log!\n\0";
@@ -201,20 +207,26 @@ pub unsafe extern "C" fn BlackboxFullWriteFileRust(
     is_append: i32,
 ) -> i32 {
     if file_path.is_null() || buf.is_null() || buf_size == 0 {
+        BlackboxLogInvalidWriteArgs(file_path, buf as *const c_void, buf_size);
         return -1;
     }
     if !IsLogPartReady() {
+        BlackboxLogLogPartNotReady();
         return -1;
     }
 
     let fd = BlackboxOpenForWrite(file_path, is_append);
     if fd < 0 {
+        BlackboxLogOpenFailed(file_path, fd);
         return -1;
     }
 
     let ok = write_all(fd, buf, buf_size);
     let _ = BlackboxFsync(fd);
     let _ = BlackboxClose(fd);
+    if !ok {
+        BlackboxLogWriteFailed(file_path);
+    }
     if ok {
         0
     } else {
@@ -252,7 +264,8 @@ pub unsafe extern "C" fn BlackboxSaveBasicErrorInfoRust(
     idx = write_bytes(&mut buf, idx, &info_ref.error_desc[..desc_len]);
     idx = write_bytes(&mut buf, idx, ERROR_INFO_TAIL);
     if idx >= buf.len() {
-        return -1;
+        BlackboxLogBufferNotEnough();
+        return 0;
     }
 
     let _ = BlackboxFullWriteFileRust(file_path, buf.as_ptr(), idx, 0);
@@ -437,6 +450,8 @@ pub unsafe extern "C" fn BlackboxSaveLastLogCoreRust(
             } else {
                 log_err_module(module_ptr, LOG_ERR_OPS_MISSING);
             }
+        } else {
+            log_err_simple(LOG_ERR_OPS_NULL);
         }
         node = unsafe { (*node).pst_next };
     }
