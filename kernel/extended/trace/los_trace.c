@@ -132,6 +132,11 @@ VOID TraceLogDumpStateRust(UINT32 state)
     TRACE_ERROR("trace dump must after trace stopped , the current state is : %d\n", state);
 }
 
+VOID TraceLogFrameTooLargeRust(UINT32 frameSize, UINT32 bufSize)
+{
+    TRACE_ERROR("trace frame size %u exceeds rust buffer %u\n", frameSize, bufSize);
+}
+
 UINT32 TraceGetErrnoTraceErrorStatusRust(VOID)
 {
     return LOS_ERRNO_TRACE_ERROR_STATUS;

@@ -428,3 +428,9 @@ Prompt:
 
 改动:
 - hidumper DumpMemData Rust 不再解引用外部指针（避免潜在越界访问）
+
+Prompt:
+请继续中风险和低风险的修复
+
+改动:
+- trace Rust 路径在 frame 过大时输出错误日志，避免静默丢弃

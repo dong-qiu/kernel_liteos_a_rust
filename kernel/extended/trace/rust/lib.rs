@@ -51,6 +51,7 @@ extern "C" {
     fn TraceMemInfoReqRust();
     fn TraceLogNotInitedRust();
     fn TraceLogDumpStateRust(state: u32);
+    fn TraceLogFrameTooLargeRust(frame_size: u32, buf_size: u32);
     fn TraceGetErrnoTraceErrorStatusRust() -> u32;
     fn TracePipelineInitRust() -> u32;
     fn TraceCreateAgentTaskRust() -> u32;
@@ -298,6 +299,7 @@ pub unsafe extern "C" fn OsTraceHookRust(
 
     let frame_size = unsafe { TraceFrameSizeRust() } as usize;
     if frame_size > TRACE_FRAME_BUF_MAX {
+        unsafe { TraceLogFrameTooLargeRust(frame_size as u32, TRACE_FRAME_BUF_MAX as u32) };
         return;
     }
 
