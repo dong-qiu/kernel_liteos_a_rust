@@ -172,6 +172,7 @@ pub extern "C" fn HiDumperDumpTaskInfoRust() {
 }
 
 #[repr(C)]
+#[allow(dead_code)]
 struct MemDumpParam {
     dump_type: u32,
     start: u64,
@@ -180,15 +181,14 @@ struct MemDumpParam {
 }
 
 /// # Safety
-/// Caller must provide a valid `MemDumpParam` pointer when non-null.
+/// Caller must provide a valid pointer when non-null.
 #[no_mangle]
-pub unsafe extern "C" fn HiDumperDumpMemDataRust(param: *mut core::ffi::c_void) {
+pub unsafe extern "C" fn HiDumperDumpMemDataRust(param: *mut c_void) {
     if param.is_null() {
         printk(MEMDATA_UNSUPPORTED);
         return;
     }
 
-    let _param_ref = &*(param as *const MemDumpParam);
     printk(MEMDATA_UNSUPPORTED);
 }
 

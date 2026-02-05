@@ -422,3 +422,9 @@ Prompt:
 
 改动:
 - blackbox Rust/C 行为一致性收敛（补齐写文件/参数/ops 相关错误日志）
+
+Prompt:
+先解决高风险问题
+
+改动:
+- hidumper DumpMemData Rust 不再解引用外部指针（避免潜在越界访问）
