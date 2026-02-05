@@ -32,6 +32,7 @@ const ERROR_INFO_EVENT: &[u8] = b"event: ";
 const ERROR_INFO_MODULE: &[u8] = b"\nmodule: ";
 const ERROR_INFO_DESC: &[u8] = b"\nerrorDesc: ";
 const ERROR_INFO_TAIL: &[u8] = b"\n";
+const ERROR_INFO_MAX_LEN: usize = 768;
 const LOG_ERR_SEM_PEND: &[u8] = b"Request g_opsListSem failed!\n\0";
 const LOG_ERR_OPS_LIST_NULL: &[u8] = b"ops list is NULL!\n\0";
 const LOG_ERR_OPS_MISSING: &[u8] = b"GetLastLogInfo or SaveLastLog is NULL!\n\0";
@@ -166,6 +167,17 @@ fn c_buf_len(buf: &[u8]) -> usize {
     buf.len()
 }
 
+fn write_bytes(buf: &mut [u8], mut idx: usize, bytes: &[u8]) -> usize {
+    for b in bytes {
+        if idx >= buf.len() {
+            return idx;
+        }
+        buf[idx] = *b;
+        idx += 1;
+    }
+    idx
+}
+
 unsafe fn write_all(fd: i32, mut ptr: *const u8, mut len: usize) -> bool {
     while len > 0 {
         let written = BlackboxWrite(fd, ptr, len);
@@ -177,10 +189,6 @@ unsafe fn write_all(fd: i32, mut ptr: *const u8, mut len: usize) -> bool {
         ptr = ptr.add(step);
     }
     true
-}
-
-fn write_all_slice(fd: i32, buf: &[u8]) -> bool {
-    unsafe { write_all(fd, buf.as_ptr(), buf.len()) }
 }
 
 /// # Safety
@@ -228,27 +236,26 @@ pub unsafe extern "C" fn BlackboxSaveBasicErrorInfoRust(
         return 0;
     }
 
-    let fd = BlackboxOpenForWrite(file_path, 0);
-    if fd < 0 {
-        return 0;
-    }
-
     let info_ref = unsafe { &*info };
     let event_len = c_buf_len(&info_ref.event);
     let module_len = c_buf_len(&info_ref.module);
     let desc_len = c_buf_len(&info_ref.error_desc);
 
-    let _ = write_all_slice(fd, ERROR_INFO_HEADER);
-    let _ = write_all_slice(fd, ERROR_INFO_EVENT);
-    let _ = write_all_slice(fd, &info_ref.event[..event_len]);
-    let _ = write_all_slice(fd, ERROR_INFO_MODULE);
-    let _ = write_all_slice(fd, &info_ref.module[..module_len]);
-    let _ = write_all_slice(fd, ERROR_INFO_DESC);
-    let _ = write_all_slice(fd, &info_ref.error_desc[..desc_len]);
-    let _ = write_all_slice(fd, ERROR_INFO_TAIL);
+    let mut buf = [0u8; ERROR_INFO_MAX_LEN];
+    let mut idx = 0usize;
+    idx = write_bytes(&mut buf, idx, ERROR_INFO_HEADER);
+    idx = write_bytes(&mut buf, idx, ERROR_INFO_EVENT);
+    idx = write_bytes(&mut buf, idx, &info_ref.event[..event_len]);
+    idx = write_bytes(&mut buf, idx, ERROR_INFO_MODULE);
+    idx = write_bytes(&mut buf, idx, &info_ref.module[..module_len]);
+    idx = write_bytes(&mut buf, idx, ERROR_INFO_DESC);
+    idx = write_bytes(&mut buf, idx, &info_ref.error_desc[..desc_len]);
+    idx = write_bytes(&mut buf, idx, ERROR_INFO_TAIL);
+    if idx >= buf.len() {
+        return -1;
+    }
 
-    let _ = BlackboxFsync(fd);
-    let _ = BlackboxClose(fd);
+    let _ = BlackboxFullWriteFileRust(file_path, buf.as_ptr(), idx, 0);
     0
 }
 

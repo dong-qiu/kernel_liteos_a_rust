@@ -410,3 +410,9 @@ Prompt:
 
 改动:
 - hidumper DumpMemData Rust 补充参数检查与结构体绑定（保持 Unsupported 行为）
+
+Prompt:
+请按照1,3,2,4,5,6的顺序执行
+
+改动:
+- blackbox SaveBasicErrorInfo 改为一次性写入（减少 write 次数）
